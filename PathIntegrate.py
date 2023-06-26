@@ -25,14 +25,14 @@ class PathIntegrate:
         return mv
 
     def SingleView(self, model=sklearn.linear_model.LogisticRegression, model_params=None):
-        concat_data = pd.concat(self.omics_data.values(), axis=0)
+        concat_data = pd.concat(self.omics_data.values(), axis=1)
         sspa_scores = self.sspa_method(concat_data, self.pathway_source)
 
         if model_params:
             sv = model(**model_params)
         else:
             sv = model()
-        sv = model.fit(X=sspa_scores, y=self.labels)
+        sv.fit(X=sspa_scores, y=self.labels)
 
         return sv
     
