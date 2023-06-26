@@ -24,7 +24,21 @@ class PathIntegrate:
 
         return mv
 
-    def SingleView(self):
+    def SingleView(self, model=sklearn.linear_model.LogisticRegression, model_params=None):
+        concat_data = pd.concat(self.omics_data.values(), axis=0)
+        sspa_scores = self.sspa_method(concat_data, self.pathway_source)
+
+        if model_params:
+            sv = model(**model_params)
+        else:
+            sv = model()
+        sv = model.fit(X=sspa_scores, y=self.labels)
+
+        return sv
+    
+    # cross-validation approaches
+
+    def MultiViewCV(self):
         pass
 
 
@@ -37,4 +51,7 @@ mo_paths = pd.read_csv("../Pathway_databases/Reactome_multi_omics_ChEBI_Uniprot.
 pi_model  = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]}, metadata=prot['Group'], pathway_source=mo_paths, sspa_scoring='zscore')
 
 covid_multi_view = pi_model.MultiView(ncomp=5)
-print(covid_multi_view)
+print(covid_multi_view.A_corrected_)
+
+covid_single_view = pi_model.SingleView(model_params={'random_state':0})
+print(covid_single_view.intercept_)
