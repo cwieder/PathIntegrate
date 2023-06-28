@@ -19,10 +19,8 @@ class PathIntegrate:
 
     def MultiView(self, ncomp=2):
         sspa_scores = [self.sspa_method(i, self.pathway_source) for i in self.omics_data.values()]
-        print(sspa_scores[0])
         mv = MBPLS(n_components=ncomp)
-        mv.fit(sspa_scores, self.labels)
-
+        mv.fit([i.copy(deep=True) for i in sspa_scores], self.labels)
         vip_scores = VIP_multiBlock(mv.W_, mv.Ts_, mv.P_, mv.V_)
         vip_df = pd.DataFrame(vip_scores, index=sum([i.columns.tolist() for i in sspa_scores], []))
         vip_df['Name'] = vip_df.index.map(dict(zip(self.pathway_source.index, self.pathway_source['Pathway_name'])))
@@ -70,6 +68,7 @@ pi_model  = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]
 
 covid_multi_view = pi_model.MultiView(ncomp=5)
 print(covid_multi_view.A_corrected_)
+print(covid_multi_view.vip)
 
 covid_single_view = pi_model.SingleView(model_params={'random_state':0})
 print(covid_single_view.intercept_)
