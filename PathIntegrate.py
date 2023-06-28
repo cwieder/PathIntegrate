@@ -3,6 +3,7 @@ import numpy as np
 import sspa
 import sklearn
 from mbpls.mbpls import MBPLS
+import plot_functs
 
 class PathIntegrate:
 
@@ -25,6 +26,7 @@ class PathIntegrate:
         vip_df = pd.DataFrame(vip_scores, index=sum([i.columns.tolist() for i in sspa_scores], []))
         vip_df['Name'] = vip_df.index.map(dict(zip(self.pathway_source.index, self.pathway_source['Pathway_name'])))
         mv.vip = vip_df
+        mv.omics_names = list(self.omics_data.keys())
         return mv
 
     def SingleView(self, model=sklearn.linear_model.LogisticRegression, model_params=None):
@@ -69,6 +71,8 @@ pi_model  = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]
 covid_multi_view = pi_model.MultiView(ncomp=5)
 print(covid_multi_view.A_corrected_)
 print(covid_multi_view.vip)
+
+plot_functs.plot_block_importance(covid_multi_view)
 
 covid_single_view = pi_model.SingleView(model_params={'random_state':0})
 print(covid_single_view.intercept_)
