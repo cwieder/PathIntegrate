@@ -19,9 +19,14 @@ class PathIntegrate:
 
     def MultiView(self, ncomp=2):
         sspa_scores = [self.sspa_method(i, self.pathway_source) for i in self.omics_data.values()]
+        print(sspa_scores[0])
         mv = MBPLS(n_components=ncomp)
         mv.fit(sspa_scores, self.labels)
 
+        vip_scores = VIP_multiBlock(mv.W_, mv.Ts_, mv.P_, mv.V_)
+        vip_df = pd.DataFrame(vip_scores, index=sum([i.columns.tolist() for i in sspa_scores], []))
+        vip_df['Name'] = vip_df.index.map(dict(zip(self.pathway_source.index, self.pathway_source['Pathway_name'])))
+        mv.vip = vip_df
         return mv
 
     def SingleView(self, model=sklearn.linear_model.LogisticRegression, model_params=None):
@@ -41,6 +46,19 @@ class PathIntegrate:
     def MultiViewCV(self):
         pass
 
+def VIP_multiBlock(x_weights, x_superscores, x_loadings, y_loadings):
+    # stack the weights from all blocks 
+    weights = np.vstack(x_weights)
+    # normalise the weights
+    weights_norm = weights / np.sqrt(np.sum(weights**2, axis=0))
+    # calculate product of sum of squares of superscores and y loadings
+    sumsquares = np.sum(x_superscores**2, axis=0) * np.sum(y_loadings**2, axis=0)
+    # p = number of variables - stack the loadings from all blocks
+    p = np.vstack(x_loadings).shape[0]
+    
+    # VIP is a weighted sum of squares of PLS weights 
+    vip_scores = np.sqrt(p * np.sum(sumsquares*(weights_norm**2), axis=1) / np.sum(sumsquares))
+    return vip_scores
 
 metab = pd.read_csv('metabolomics_example.csv', index_col=0)
 prot = pd.read_csv('proteomics_example.csv', index_col=0)
