@@ -4,6 +4,7 @@
 # import packages
 import pandas as pd
 import numpy as np  
+import dash
 from dash import Dash, html, dcc, Input, Output, State, ctx
 import plotly.express as px
 import dash_cytoscape as cyto
@@ -17,12 +18,18 @@ import matplotlib as matplotlib
 import svgwrite
 from datauri import DataURI
 from dash_bootstrap_components._components.Container import Container
+from pathlib import Path
+
+
+# Save downloads to default Downloads folder
+downloads_path = str(Path.home() / "Downloads")
+print(downloads_path)
 
 # Load extra layouts
 cyto.load_extra_layouts()
 
 # Set stylesheet
-app = Dash(__name__, external_stylesheets=[dbc.themes.PULSE])
+app = Dash(__name__, external_stylesheets=[dbc.themes.PULSE], use_pages=True)
 
 # generate node colours based on model attributes
 def get_hex_colors(values, cmap):
@@ -50,11 +57,10 @@ hierarchy_hsa_all = pd.concat([hierarchy_hsa, pd.DataFrame([hierarchy_hsa_parent
 G = nx.from_pandas_edgelist(hierarchy_hsa, source=0, target=1, create_using=nx.DiGraph())
 hierarchy_hsa_all['Root'] = [find_root(G, i) for i in hierarchy_hsa_all[1]]
 root_cmap = dict(zip(set(hierarchy_hsa_all['Root']), sns.color_palette("hls", len(set(hierarchy_hsa_all['Root']))).as_hex()))
-cy_mo = nx.readwrite.json_graph.cytoscape_data(G)
-
+# cy_mo = nx.readwrite.json_graph.cytoscape_data(G)
 
 def create_network(pi_model, pathway_source, hierarchy_source='preloaded'):
-    pathways_accessible = pi_model.
+    pathways_accessible = list(set(sum([i.columns.tolist() for i in pi_model.sspa_scores.values()], [])))
 
     # Add model attributes to network
     name_dict = dict(zip(pathway_source.index, pathway_source['Pathway_name']))
@@ -63,17 +69,37 @@ def create_network(pi_model, pathway_source, hierarchy_source='preloaded'):
                               'RootCol': root_cmap[attr], 
                               'color': root_cmap[attr], 
                               'RootName': name_dict[attr]}) for (node, attr) in dict(zip(hierarchy_hsa_all[1], hierarchy_hsa_all['Root'])).items()])
+    G.add_nodes_from([(node, {'MO_coverage': attr}) for (node, attr) in pi_model.coverage.items()])
 
 
-    # add beta as node colour
-    betas_cmap = dict(zip(all_pathways, sns.color_palette("RdBu", len(all_pathways)).as_hex()))
-    G.add_nodes_from([(node, {'BetaColour': attr}) for (node, attr) in betas_cmap.items()])
+    if pi_model.name == 'MultiView':
+        # add beta as node colour
+        betas_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.beta, 'RdBu')))
+        G.add_nodes_from([(node, {'BetaColour': attr}) for (node, attr) in betas_cmap.items()])
 
-    # add vip as node colour
-    vip_cmap = dict(zip(all_pathways, get_hex_colors(vip_df['VIP_scaled'].tolist(), 'Blues')))
-    G.add_nodes_from([(node, {'VIPColour': attr}) for (node, attr) in vip_cmap.items()])
+        # add vip as node colour
+        vip_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.vip['VIP_scaled'].tolist(), 'Blues')))
+        G.add_nodes_from([(node, {'VIPColour': attr}) for (node, attr) in vip_cmap.items()])
+    
+    # only show nodes with sufficient coverage
+    global MO_graph
+    MO_graph = G.subgraph(pathways_accessible)
+    cy_mo = nx.readwrite.json_graph.cytoscape_data(MO_graph)
+    # network generation
+    content = html.Div(
+        cyto.Cytoscape(
+            id='mo_graph',
+            layout={'name': 'random'},
+            style={'width': '100%', 'height': '800px'},
+            elements=
+                cy_mo['elements']['nodes'] + cy_mo['elements']['edges'],
+            stylesheet=default_stylesheet
+        ), style=CONTENT_STYLE
+    )
+    app.layout = html.Div([dcc.Location(id="url"), navbar, sidebar, content, sidebar2])
+
     # start local server
-    app.run_server(debug=True, use_reloader=False)
+    app.run_server(debug=True, use_reloader=True)
 
 
 
@@ -99,27 +125,6 @@ CONTENT_STYLE = {
 
 sidebar = html.Div(
     [
-    html.P("Data input"),
-    html.Hr(),
-    dcc.Upload(
-        id='upload-data',
-        children=html.Div([
-            'Select files'
-        ]),
-        style={
-            'width': '90%',
-            'height': '60px',
-            'lineHeight': '60px',
-            'borderWidth': '1px',
-            'borderStyle': 'dashed',
-            'borderRadius': '5px',
-            'textAlign': 'center',
-            'margin': '5px'
-        },
-        # Allow multiple files to be uploaded
-        multiple=True
-    ),
-    html.Div(id='output-data-upload'),
 
     html.P("Network options"),
     html.Hr(),
@@ -133,7 +138,7 @@ sidebar = html.Div(
     clearable=False,
     options=[
         {'label': name.capitalize(), 'value': name}
-        for name in ['random', 'cose', 'circle', 'grid', 'concentric', 'cola', 'cise']
+        for name in ['random', 'cose', 'circle', 'grid', 'concentric', 'cola']
     ]),
     html.P(
         "Colour nodes by"
@@ -144,33 +149,28 @@ sidebar = html.Div(
     clearable=False,
     options=[
         {'label': name.capitalize(), 'value': name}
-        for name in ['hierarchy', 'beta', 'VIP', 'P-value', 'pathway score']
+        for name in ['hierarchy', 'beta', 'VIP']
     ]),
-    html.P(
-        "Show omics"
-    ),
-    dcc.Dropdown(
-    id='dropdown-update-omics',
-    value='metabolomics',
-    clearable=False,
-    options=[
-        {'label': name.capitalize(), 'value': name}
-        for name in ['metabolomics', 'proteomics', 'multi-omics']
-    ]),
-    html.P(
-        "Export image"
-    ),
+    # html.P(
+    #     "Show omics"
+    # ),
     # dcc.Dropdown(
-    # id='dropdown-export-img',
-    # value='PNG',
+    # id='dropdown-update-omics',
+    # value='multi-omics',
     # clearable=False,
     # options=[
-    #     {'label': name.upper(), 'value': name}
-    #     for name in ['png', 'svg']
+    #     {'label': name.capitalize(), 'value': name}
+    #     for name in ['metabolomics', 'proteomics', 'multi-omics']
     # ]),
+    html.P(
+        "Export network"
+    ),
+
     html.Br(),
     dbc.Button("SVG", color="primary", id='btn-get-svg'),
     dbc.Button("PNG", color="primary", id='btn-get-png'),
+    dbc.Button("Network", color="primary", id='btn-get-gml'),
+    dcc.Download(id="download-network")
     ],
     style=SIDEBAR_STYLE,
 )
@@ -192,8 +192,7 @@ sidebar2 = html.Div(
                 [html.P("Coverage"), html.P(id='cytoscape-mouseoverNodeData-output-coverage')
                 ])),
     ]),
-    dbc.Input(id="input-pathway", placeholder="Select a pathway...", type="text"),
-    dcc.Graph(id="bar-plot"),
+
     html.Br(),
 
     ],
@@ -210,28 +209,40 @@ sidebar2 = html.Div(
 )
 
 
+
 navbar = dbc.NavbarSimple(
     children=[
-        dbc.NavItem(dbc.NavLink("Page 1", href="#")),
+        dbc.NavItem(dbc.NavLink("Home", href="/")),
         dbc.DropdownMenu(
             children=[
                 dbc.DropdownMenuItem("More pages", header=True),
-                dbc.DropdownMenuItem("Page 2", href="#"),
-                dbc.DropdownMenuItem("Page 3", href="#"),
+                dbc.DropdownMenuItem("Detail view", href="/details"),
+                dbc.DropdownMenuItem("About", href="/about"),
+
             ],
             nav=True,
             in_navbar=True,
             label="More",
         ),
+            html.Div(
+        [
+            html.Div(
+                dcc.Link(
+                    f"{page['name']} - {page['path']}", href=page["relative_path"]
+                )
+            )
+            for page in dash.page_registry.values()
+        ]
+    ),
+
+	dash.page_container
     ],
-    brand="Multi-omics pathway network explorer",
+    brand="PathIntegrate multi-omics pathway network explorer",
     brand_href="#",
     color="primary",
     dark=True,
     fixed='top'
 )
-
-
 
 # default stylesheet
 default_stylesheet = [
@@ -244,8 +255,8 @@ default_stylesheet = [
             'text-wrap': 'wrap',
             'text-background-color': 'yellow',
             'text-max-width': '120px',
-            'width': '10',
-            'height':'10',
+            'width': 'data(MO_coverage)',
+            'height':'data(MO_coverage)',
             'text-justification': 'auto',
             'font-family': ['Verdana', 'Roboto', 'Arial'],
             'font-size': '10px'
@@ -258,39 +269,24 @@ default_stylesheet = [
         }
     }
 ]
-content = html.Div(
-    cyto.Cytoscape(
-        id='mo_graph',
-        layout={'name': 'random'},
-        style={'width': '100%', 'height': '800px'},
-        elements=
-            cy_mo['elements']['nodes'] + cy_mo['elements']['edges'],
-        stylesheet=default_stylesheet
-    ), style=CONTENT_STYLE
-)
 
-app.layout = html.Div([dcc.Location(id="url"), navbar, sidebar, content, sidebar2])
+
 
 # Callback for updating the graph layout
-
-# callbacks
 @app.callback(Output('mo_graph', 'layout'), Input('dropdown-update-layout', 'value'))
 def update_layout(layout):
     return {
         'name': layout,
-        'animate': False
+        'animate': True
     }
 
-
-
+# callback for updating node colour
 @app.callback(Output('mo_graph', 'stylesheet'),
-              Input('dropdown-update-node-color', 'value'), Input('dropdown-update-omics', 'value'))
-def update_stylesheet(node_value, omics):
-    node_value_color = {'hierarchy': 'data(color)', 'beta': 'data(BetaColour)', 'VIP': 'data(VIPColour)', 'P-value': 'data(PColour)'}
-    omics_selector = {'metabolomics': 'data(Coverage_m)', 'proteomics': 'data(Coverage_p)', 'multi-omics': 'data(Coverage_mo)'}
+              Input('dropdown-update-node-color', 'value'))
+def update_stylesheet(node_value):
+    node_value_color = {'hierarchy': 'data(color)', 'beta': 'data(BetaColour)', 'VIP': 'data(VIPColour)'}
 
-    if node_value != 'pathway score':
-        new_styles = [
+    new_styles = [
         {
             'selector': 'node',
             'style': {
@@ -298,8 +294,8 @@ def update_stylesheet(node_value, omics):
                 'border-width': '1px',
                 'border-color': 'black',
                 'background-fit': 'cover',
-                'height': omics_selector[omics],
-                'width': omics_selector[omics]
+                'height': 'data(MO_coverage)',
+                'width':'data(MO_coverage)'
                 # 'background-image': bg_img[node_value]
             }
         },
@@ -308,56 +304,12 @@ def update_stylesheet(node_value, omics):
             'style': {
                 'line-color': '#A3C4BC'
             }
-        }]
+    }]
 
-    else:
-        new_styles = [
-        {
-            'selector': 'node',
-            'style': {
-                'border-width': '1px',
-                'border-color': 'black',
-                'background-fit': 'cover',
-                'background-image': 'data(NodeSVG)',
-                'height': omics_selector[omics]**10,
-                'width': omics_selector[omics]**10
-            }
-        },
-        {
-            'selector': 'edge',
-            'style': {
-                'line-color': '#A3C4BC'
-            }
-        }]
 
     return default_stylesheet + new_styles
 
-@app.callback(Output('mo_graph', 'elements'), Input('dropdown-update-omics', 'value'))
-def update_layout(omics):
-    omics_selector = {'multi-omics': cy_mo}
-        # omics_selector = {'metabolomics': cy, 'proteomics': cy_p, 'multi-omics': cy_mo}
-    return omics_selector[omics]['elements']['nodes'] + omics_selector[omics]['elements']['edges']
 
-# @app.callback(Output('mo_graph', 'stylesheet'), Input('dropdown-update-omics', 'value'))
-# def update_size(omics):
-#     omics_selector = {'metabolomics': data['Coverage_m'], 'proteomics': data['Coverage_P']}
-
-#     new_styles = [
-#         {
-#             'selector': 'node',
-#             'style': {
-#                 'background-color': node_value_color[node_value],
-#                 'border-width': '1px',
-#                 'border-color': 'black',
-#                 'background-fit': 'cover',
-#                 'height': omics_selector[omics],
-#                 'width': omics_selector[omics]
-#                 # 'background-image': bg_img[node_value]
-#             }
-#         }]
-#     return default_stylesheet + new_styles
-
-# show hover text
 @app.callback(Output('cytoscape-mouseoverNodeData-output-name', 'children'),
               Input('mo_graph', 'mouseoverNodeData'))
 def displayTapNodeData(data):
@@ -374,52 +326,8 @@ def displayTapNodeData(data):
               Input('mo_graph', 'mouseoverNodeData'))
 def displayTapNodeData(data):
     if data:
-        cvrg1 = None
-        cvrg2 = None
-        try:
-            cvrg1 = data['Coverage_m']
-        except KeyError:
-            cvrg1 = 'Not present in M' 
+        return data['MO_coverage']
 
-        try:
-            cvrg2 = data['Coverage_p']
-        except KeyError:
-            cvrg2 = 'Not present in P' 
-
-
-        return str(cvrg1) + " " + str(cvrg2)
-
-# Get user input files
-def parse_contents(contents, filename, date):
-    content_type, content_string = contents.split(',')
-
-    decoded = base64.b64decode(content_string)
-    try:
-        if 'csv' in filename:
-            # Assume that the user uploaded a CSV file
-            df = pd.read_csv(
-                io.StringIO(decoded.decode('utf-8')))
-        elif 'xls' in filename:
-            # Assume that the user uploaded an excel file
-            df = pd.read_excel(io.BytesIO(decoded))
-        return df
-    except Exception as e:
-        print(e)
-        return html.Div([
-            'There was an error processing this file.'
-        ])
-    
-
-@app.callback(Output('output-data-upload', 'children'),
-              Input('upload-data', 'contents'),
-              State('upload-data', 'filename'),
-              State('upload-data', 'last_modified'))
-def update_output(list_of_contents, list_of_names, list_of_dates):
-    if list_of_contents is not None:
-        children = list_of_names
-            # parse_contents(c, n, d) for c, n, d in
-            # zip(list_of_contents, list_of_names, list_of_dates)]
-        return children
 
 # Download image
 @app.callback(
@@ -448,6 +356,19 @@ def get_image(get_clicks_svg, get_clicks_png):
         'type': ftype,
         'action': action
         }
+
+@app.callback(
+    Output("download-network", "data"),
+    Input("btn-get-gml", "n_clicks"),
+    prevent_initial_call=True,
+)
+def download_network(n_clicks):
+    download_path = downloads_path+"/PathIntegrate_network.gml"
+    nx.write_gml(MO_graph, download_path)
+    print("Network .gml file saved to: "+download_path)
+
+    return nx.write_gml(MO_graph, download_path)
+
 
 # molecule level vis
 # @app.callback(
