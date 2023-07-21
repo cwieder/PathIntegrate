@@ -4,26 +4,30 @@ import sspa
 import sklearn
 from mbpls.mbpls import MBPLS
 import plot_functs
+from NetworkExplorer import create_network
 
 class PathIntegrate:
 
-    def __init__(self, omics_data:dict, metadata, pathway_source, sspa_scoring='svd'):
+    def __init__(self, omics_data:dict, metadata, pathway_source, sspa_scoring='svd', min_coverage=3):
         self.omics_data = omics_data
         self.metadata = metadata
         self.pathway_source = pathway_source
         self.sspa_scoring = sspa_scoring
+        self.min_coverage = min_coverage
         
         sspa_methods = {'svd': sspa.sspa_svd, 'ssGSEA': sspa.sspa_ssGSEA, 'kpca': sspa.sspa_kpca, 'ssClustPA': sspa.sspa_ssClustPA, 'zscore': sspa.sspa_zscore}
         self.sspa_method = sspa_methods[self.sspa_scoring]
+        self.sspa_scores_mv = None
+        self.sspa_scores_sv = None
 
         self.labels = pd.factorize(self.metadata)[0]
 
     def MultiView(self, ncomp=2):
-        sspa_scores = [self.sspa_method(i, self.pathway_source) for i in self.omics_data.values()]
+        self.sspa_scores_mv = [self.sspa_method(i, self.pathway_source, self.min_coverage) for i in self.omics_data.values()]
         mv = MBPLS(n_components=ncomp)
-        mv.fit([i.copy(deep=True) for i in sspa_scores], self.labels)
+        mv.fit([i.copy(deep=True) for i in self.sspa_scores_mv], self.labels)
         vip_scores = VIP_multiBlock(mv.W_, mv.Ts_, mv.P_, mv.V_)
-        vip_df = pd.DataFrame(vip_scores, index=sum([i.columns.tolist() for i in sspa_scores], []))
+        vip_df = pd.DataFrame(vip_scores, index=sum([i.columns.tolist() for i in self.sspa_scores_mv], []))
         vip_df['Name'] = vip_df.index.map(dict(zip(self.pathway_source.index, self.pathway_source['Pathway_name'])))
         mv.vip = vip_df
         mv.omics_names = list(self.omics_data.keys())
@@ -31,13 +35,13 @@ class PathIntegrate:
 
     def SingleView(self, model=sklearn.linear_model.LogisticRegression, model_params=None):
         concat_data = pd.concat(self.omics_data.values(), axis=1)
-        sspa_scores = self.sspa_method(concat_data, self.pathway_source)
+        self.sspa_scores_sv = self.sspa_method(concat_data, self.pathway_source, self.min_coverage)
 
         if model_params:
             sv = model(**model_params)
         else:
             sv = model()
-        sv.fit(X=sspa_scores, y=self.labels)
+        sv.fit(X=self.sspa_scores_sv, y=self.labels)
 
         return sv
     
@@ -64,11 +68,17 @@ metab = pd.read_csv('metabolomics_example.csv', index_col=0)
 prot = pd.read_csv('proteomics_example.csv', index_col=0)
 
 # make possible to download MO paths from reactome
-mo_paths = pd.read_csv("../Pathway_databases/Reactome_multi_omics_ChEBI_Uniprot.csv", index_col=0)
-
+mo_paths = sspa.process_reactome(
+    organism='Homo sapiens',
+    download_latest=True,
+    omics_type='multiomics')
 pi_model  = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]}, metadata=prot['Group'], pathway_source=mo_paths, sspa_scoring='zscore')
 
 covid_multi_view = pi_model.MultiView(ncomp=5)
+
+# launch the pathwy network explorer on a local server
+create_network(pi_model, mo_paths)
+
 print(covid_multi_view.A_corrected_)
 print(covid_multi_view.vip)
 
