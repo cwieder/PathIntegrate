@@ -328,16 +328,26 @@ def download_network(n_clicks):
 
     return nx.write_gml(MO_graph, download_path)
 
-# update dynamic dropdown
-@app.callback(
-    Output("my-dynamic-dropdown", "options"),
-    Input("my-dynamic-dropdown", "search_value")
-)
-def update_options(search_value):
-    if not search_value:
-        raise PreventUpdate
-    if search_value in pathways_accessible:
-        return search_value
+    
+@app.callback(Output("fig_molecular", "figure"), Input("dropdown", "value"))
+def update_bar_chart(pathway):
+    if len(molecule_importances) > 1:
+        pathways_dfs = []
+        for k, v in molecule_importances.items():
+            try:
+                pdf = v[pathway]
+                pdf = pdf.add_suffix(k)
+                pathways_dfs.append(pdf)
+            except KeyError:    
+                pass
+
+        pathway_df_molec = pd.concat(pathways_dfs, axis=1)
+        print(pathway_df_molec)
+        fig = px.bar(pathway_df_molec.melt(), x='variable', y='value')
+    else:
+        pathway_df_molec = molecule_importances[pathway]
+        fig = px.bar(pathway_df_molec, x=pathway_df_molec, y='loadings')
+    return fig
 # molecule level vis
 # @app.callback(
 #     Output("bar-plot", "figure"), 
@@ -365,7 +375,6 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
                               'RootName': name_dict[attr]}) for (node, attr) in dict(zip(hierarchy_hsa_all[1], hierarchy_hsa_all['Root'])).items()])
     G.add_nodes_from([(node, {'MO_coverage': attr}) for (node, attr) in pi_model.coverage.items()])
 
-
     if pi_model.name == 'MultiView':
         # add beta as node colour
         betas_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.beta, 'RdBu')))
@@ -374,6 +383,11 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
         # add vip as node colour
         vip_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.vip['VIP_scaled'].tolist(), 'Blues')))
         G.add_nodes_from([(node, {'VIPColour': attr}) for (node, attr) in vip_cmap.items()])
+
+    # add molecular importances for plotting
+    global molecule_importances
+    molecule_importances = pi_model.molecular_importances
+
     
     # only show nodes with sufficient coverage
     global MO_graph
@@ -391,9 +405,7 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
     # style=CONTENT_STYLE
     )
 
-    # molecular importance
-    data_canada = px.data.gapminder().query("country == 'Canada'")
-    fig_molecular = px.bar(data_canada, x='year', y='pop')
+
         
     app.layout = html.Div([
         navbar,
@@ -408,11 +420,10 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
                     "Single dynamic Dropdown",
                     dcc.Dropdown(pathways_accessible,
                                  placeholder="Select a pathway",
-                    id="my-dynamic-dropdown")
+                    id="dropdown")
                 ]),
-                dcc.Graph(
-                    figure=fig_molecular
-                )
+                dcc.Graph(id="fig_molecular"),
+                
             ]),
         ])
         ],
