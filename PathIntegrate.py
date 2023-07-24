@@ -4,12 +4,12 @@ import sspa
 import sklearn
 from mbpls.mbpls import MBPLS
 import plot_functs
-from app import create_network
+from app import launch_network_app
 from sklearn.preprocessing import StandardScaler
 
 class PathIntegrate:
 
-    def __init__(self, omics_data:dict, metadata, pathway_source, sspa_scoring='svd', min_coverage=3):
+    def __init__(self, omics_data:dict, metadata, pathway_source, sspa_scoring='svd', min_coverage=5):
         self.omics_data = omics_data
         self.metadata = metadata
         self.pathway_source = pathway_source
@@ -22,6 +22,7 @@ class PathIntegrate:
         self.sspa_scores_mv = None
         self.sspa_scores_sv = None
         self.coverage = self.get_multi_omics_coverage()
+        self.molecular_importances = None
 
         self.mv = None
         self.sv = None
@@ -107,7 +108,7 @@ pi_model = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]}
 covid_multi_view = pi_model.MultiView(ncomp=5)
 
 # launch the pathwy network explorer on a local server
-create_network(covid_multi_view, mo_paths)
+launch_network_app(covid_multi_view, mo_paths)
 
 # print(covid_multi_view.A_corrected_)
 # print(covid_multi_view.vip)

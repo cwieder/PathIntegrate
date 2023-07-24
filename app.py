@@ -19,17 +19,17 @@ import svgwrite
 from datauri import DataURI
 from dash_bootstrap_components._components.Container import Container
 from pathlib import Path
+from dash.exceptions import PreventUpdate
 
 
 # Save downloads to default Downloads folder
 downloads_path = str(Path.home() / "Downloads")
-print(downloads_path)
 
 # Load extra layouts
 cyto.load_extra_layouts()
 
 # Set stylesheet
-app = Dash(__name__, external_stylesheets=[dbc.themes.PULSE], use_pages=True)
+app = Dash(__name__, external_stylesheets=[dbc.themes.YETI], use_pages=False)
 
 # generate node colours based on model attributes
 def get_hex_colors(values, cmap):
@@ -57,50 +57,7 @@ hierarchy_hsa_all = pd.concat([hierarchy_hsa, pd.DataFrame([hierarchy_hsa_parent
 G = nx.from_pandas_edgelist(hierarchy_hsa, source=0, target=1, create_using=nx.DiGraph())
 hierarchy_hsa_all['Root'] = [find_root(G, i) for i in hierarchy_hsa_all[1]]
 root_cmap = dict(zip(set(hierarchy_hsa_all['Root']), sns.color_palette("hls", len(set(hierarchy_hsa_all['Root']))).as_hex()))
-# cy_mo = nx.readwrite.json_graph.cytoscape_data(G)
-
-def create_network(pi_model, pathway_source, hierarchy_source='preloaded'):
-    pathways_accessible = list(set(sum([i.columns.tolist() for i in pi_model.sspa_scores.values()], [])))
-
-    # Add model attributes to network
-    name_dict = dict(zip(pathway_source.index, pathway_source['Pathway_name']))
-    G.add_nodes_from([(node, {'Name': attr, 'label': attr}) for (node, attr) in name_dict.items()])
-    G.add_nodes_from([(node, {'Root': attr, 
-                              'RootCol': root_cmap[attr], 
-                              'color': root_cmap[attr], 
-                              'RootName': name_dict[attr]}) for (node, attr) in dict(zip(hierarchy_hsa_all[1], hierarchy_hsa_all['Root'])).items()])
-    G.add_nodes_from([(node, {'MO_coverage': attr}) for (node, attr) in pi_model.coverage.items()])
-
-
-    if pi_model.name == 'MultiView':
-        # add beta as node colour
-        betas_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.beta, 'RdBu')))
-        G.add_nodes_from([(node, {'BetaColour': attr}) for (node, attr) in betas_cmap.items()])
-
-        # add vip as node colour
-        vip_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.vip['VIP_scaled'].tolist(), 'Blues')))
-        G.add_nodes_from([(node, {'VIPColour': attr}) for (node, attr) in vip_cmap.items()])
-    
-    # only show nodes with sufficient coverage
-    global MO_graph
-    MO_graph = G.subgraph(pathways_accessible)
-    cy_mo = nx.readwrite.json_graph.cytoscape_data(MO_graph)
-    # network generation
-    content = html.Div(
-        cyto.Cytoscape(
-            id='mo_graph',
-            layout={'name': 'random'},
-            style={'width': '100%', 'height': '800px'},
-            elements=
-                cy_mo['elements']['nodes'] + cy_mo['elements']['edges'],
-            stylesheet=default_stylesheet
-        ), style=CONTENT_STYLE
-    )
-    app.layout = html.Div([dcc.Location(id="url"), navbar, sidebar, content, sidebar2])
-
-    # start local server
-    app.run_server(debug=True, use_reloader=True)
-
+cy_mo = nx.readwrite.json_graph.cytoscape_data(G)
 
 
 
@@ -111,14 +68,19 @@ SIDEBAR_STYLE = {
     "left": 0,
     "bottom": 0,
     "width": "16rem",
-    "padding": "2rem 1rem",
+    "padding": "1rem",
+    "padding-top": "5rem",
     "background-color": "#BBDEFB",
-    "padding": "6rem 1rem 2rem",
+    # "padding": "6rem 1rem 2rem",
 }
 CONTENT_STYLE = {
-    "margin-left": "18rem",
-    "margin-right": "18rem",
-    "padding": "2rem 1rem",
+    "margin-left": "16rem",
+    "margin-right": "16rem",
+    # "padding": "1rem 1rem",
+    "padding-top": "4rem",
+    "padding-bottom": "1rem",
+    "padding-left": "1rem",
+    "padding-right": "1rem",
     # "border":"2px black solid"
     "background-color": "#FFFFFF",
 }
@@ -166,7 +128,6 @@ sidebar = html.Div(
         "Export network"
     ),
 
-    html.Br(),
     dbc.Button("SVG", color="primary", id='btn-get-svg'),
     dbc.Button("PNG", color="primary", id='btn-get-png'),
     dbc.Button("Network", color="primary", id='btn-get-gml'),
@@ -201,47 +162,45 @@ sidebar2 = html.Div(
     "top": 0,
     "right": 0,
     "bottom": 0,
-    "width": "20rem",
-    "padding": "2rem 1rem",
+    "width": "16rem",
+    "padding": "1rem",
+    "padding-top": "5rem",
     "background-color": "#BBDEFB",
-    "padding": "6rem 1rem 2rem",
 },
 )
 
 
 
 navbar = dbc.NavbarSimple(
-    children=[
-        dbc.NavItem(dbc.NavLink("Home", href="/")),
-        dbc.DropdownMenu(
-            children=[
-                dbc.DropdownMenuItem("More pages", header=True),
-                dbc.DropdownMenuItem("Detail view", href="/details"),
-                dbc.DropdownMenuItem("About", href="/about"),
+    # children=[
+    #     dbc.NavItem(dbc.NavLink("Home", href="/")),
+    #     dbc.DropdownMenu(
+    #         children=[
+    #             dbc.DropdownMenuItem("Detail view", href="/details"),
+    #             dbc.DropdownMenuItem("About", href="/about"),
 
-            ],
-            nav=True,
-            in_navbar=True,
-            label="More",
-        ),
-            html.Div(
-        [
-            html.Div(
-                dcc.Link(
-                    f"{page['name']} - {page['path']}", href=page["relative_path"]
-                )
-            )
-            for page in dash.page_registry.values()
-        ]
-    ),
-
-	dash.page_container
-    ],
+    #         ],
+    #         nav=True,
+    #         in_navbar=True,
+    #         label="More",
+    #     ),
+    # ],
     brand="PathIntegrate multi-omics pathway network explorer",
     brand_href="#",
     color="primary",
     dark=True,
-    fixed='top'
+    fixed='top',
+    style={
+    # "position": "fixed",
+    # "top": 0,
+    # "right": 0,
+    # "bottom": 0,
+    # "padding-bottom": "2rem",
+    # "width": "20rem",
+    # "padding": "2rem 1rem",
+    # "background-color": "#BBDEFB",
+    # "padding": "6rem 1rem 2rem",
+    },
 )
 
 # default stylesheet
@@ -369,7 +328,16 @@ def download_network(n_clicks):
 
     return nx.write_gml(MO_graph, download_path)
 
-
+# update dynamic dropdown
+@app.callback(
+    Output("my-dynamic-dropdown", "options"),
+    Input("my-dynamic-dropdown", "search_value")
+)
+def update_options(search_value):
+    if not search_value:
+        raise PreventUpdate
+    if search_value in pathways_accessible:
+        return search_value
 # molecule level vis
 # @app.callback(
 #     Output("bar-plot", "figure"), 
@@ -381,3 +349,87 @@ def download_network(n_clicks):
 #         fig = px.bar(mean_vals_long, x="variable", y="value", 
 #                     color="Group", barmode="group")
 #         return fig
+
+
+# start local server
+def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
+    global pathways_accessible
+    pathways_accessible = list(set(sum([i.columns.tolist() for i in pi_model.sspa_scores.values()], [])))
+
+    # Add model attributes to network
+    name_dict = dict(zip(pathway_source.index, pathway_source['Pathway_name']))
+    G.add_nodes_from([(node, {'Name': attr, 'label': attr}) for (node, attr) in name_dict.items()])
+    G.add_nodes_from([(node, {'Root': attr, 
+                              'RootCol': root_cmap[attr], 
+                              'color': root_cmap[attr], 
+                              'RootName': name_dict[attr]}) for (node, attr) in dict(zip(hierarchy_hsa_all[1], hierarchy_hsa_all['Root'])).items()])
+    G.add_nodes_from([(node, {'MO_coverage': attr}) for (node, attr) in pi_model.coverage.items()])
+
+
+    if pi_model.name == 'MultiView':
+        # add beta as node colour
+        betas_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.beta, 'RdBu')))
+        G.add_nodes_from([(node, {'BetaColour': attr}) for (node, attr) in betas_cmap.items()])
+
+        # add vip as node colour
+        vip_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.vip['VIP_scaled'].tolist(), 'Blues')))
+        G.add_nodes_from([(node, {'VIPColour': attr}) for (node, attr) in vip_cmap.items()])
+    
+    # only show nodes with sufficient coverage
+    global MO_graph
+    MO_graph = G.subgraph(pathways_accessible)
+    cy_mo = nx.readwrite.json_graph.cytoscape_data(MO_graph)
+    # network generation
+    content = html.Div(
+        cyto.Cytoscape(
+            id='mo_graph',
+            layout={'name': 'random'},
+            style={'width': '100%', 'height': '800px'},
+            elements=cy_mo['elements']['nodes'] + cy_mo['elements']['edges'],
+            stylesheet=default_stylesheet
+        ),
+    # style=CONTENT_STYLE
+    )
+
+    # molecular importance
+    data_canada = px.data.gapminder().query("country == 'Canada'")
+    fig_molecular = px.bar(data_canada, x='year', y='pop')
+        
+    app.layout = html.Div([
+        navbar,
+        sidebar,
+        sidebar2,
+        dcc.Tabs([
+            dcc.Tab(label='Network', children=[
+                content,
+            ]),
+            dcc.Tab(label='Molecular importance', children=[
+                html.Div([
+                    "Single dynamic Dropdown",
+                    dcc.Dropdown(pathways_accessible,
+                                 placeholder="Select a pathway",
+                    id="my-dynamic-dropdown")
+                ]),
+                dcc.Graph(
+                    figure=fig_molecular
+                )
+            ]),
+        ])
+        ],
+        style=CONTENT_STYLE
+
+    )
+
+    # app.layout = dbc.Container([
+    #                         html.Div([ dcc.Location(id="url",refresh=False), 
+    #                         navbar, 
+    #                         sidebar,
+    #                         content,
+    #                         sidebar2,
+    #                         ]),],fluid=True)
+    # app.layout = html.Div([dcc.Location(id="url"), navbar, sidebar, content, sidebar2])
+    app.run_server(debug=True, use_reloader=True)
+
+
+ 
+   
