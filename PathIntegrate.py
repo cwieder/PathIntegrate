@@ -81,9 +81,11 @@ class PathIntegrate:
         return coverage
 
     def MultiView(self, ncomp=2):
+        print('Generating pathway scores...')
         sspa_scores = [self.sspa_method(i, self.pathway_source, self.min_coverage, return_molecular_importance=True) for i in self.omics_data.values()]
         self.sspa_scores_mv = dict(zip(self.omics_data.keys(), [i[0] for i in sspa_scores]))
         # self.sspa_scores_mv = {k: self.sspa_method(v, self.pathway_source, self.min_coverage) for k, v in self.omics_data.items()}
+        print('Fitting MultiView model')
         mv = MBPLS(n_components=ncomp)
         mv.fit([i.copy(deep=True) for i in self.sspa_scores_mv.values()], self.labels)
 
@@ -107,6 +109,8 @@ class PathIntegrate:
 
     def SingleView(self, model=sklearn.linear_model.LogisticRegression, model_params=None):
         concat_data = pd.concat(self.omics_data.values(), axis=1)
+        print('Generating pathway scores...')
+
         sspa_scores =self.sspa_method(concat_data, self.pathway_source, self.min_coverage, return_molecular_importance=True)
         self.sspa_scores_sv = sspa_scores[0]
        
@@ -114,6 +118,8 @@ class PathIntegrate:
             sv = model(**model_params)
         else:
             sv = model()
+        print('Fitting SingleView model')
+
         sv.fit(X=self.sspa_scores_sv, y=self.labels)
         sv.sspa_scores = self.sspa_scores_sv
         sv.name = 'SingleView'
@@ -142,24 +148,24 @@ def VIP_multiBlock(x_weights, x_superscores, x_loadings, y_loadings):
     vip_scores = np.sqrt(p * np.sum(sumsquares*(weights_norm**2), axis=1) / np.sum(sumsquares))
     return vip_scores
 
-metab = pd.read_csv('data/metabolomics_example.csv', index_col=0)
-prot = pd.read_csv('data/proteomics_example.csv', index_col=0)
+# metab = pd.read_csv('data/metabolomics_example.csv', index_col=0)
+# prot = pd.read_csv('data/proteomics_example.csv', index_col=0)
 
-# make possible to download MO paths from reactome
-# mo_paths = sspa.process_reactome(
-#     organism='Homo sapiens',
-#     download_latest=True,
-#     omics_type='multiomics',
-#     filepath='data/')
+# # make possible to download MO paths from reactome
+# # mo_paths = sspa.process_reactome(
+# #     organism='Homo sapiens',
+# #     download_latest=True,
+# #     omics_type='multiomics',
+# #     filepath='data/')
 
-# load pre-loaded pathways 
-mo_paths = sspa.process_gmt(infile='data/Reactome_Homo_sapiens_pathways_multiomics_R85.gmt')
+# # load pre-loaded pathways 
+# mo_paths = sspa.process_gmt(infile='data/Reactome_Homo_sapiens_pathways_multiomics_R85.gmt')
 
-pi_model = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]}, metadata=prot['Group'], pathway_source=mo_paths, sspa_scoring='svd', min_coverage=2)
+# pi_model = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]}, metadata=prot['Group'], pathway_source=mo_paths, sspa_scoring='svd', min_coverage=2)
 
 # covid_multi_view = pi_model.MultiView(ncomp=5)
 
-# launch the pathwy network explorer on a local server
+# # launch the pathwy network explorer on a local server
 # launch_network_app(covid_multi_view, mo_paths)
 
 # print(covid_multi_view.A_corrected_)
@@ -167,6 +173,6 @@ pi_model = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]}
 
 # plot_functs.plot_block_importance(covid_multi_view)
 
-covid_single_view = pi_model.SingleView(model_params={'random_state':0})
-launch_network_app(covid_single_view, mo_paths)
+# covid_single_view = pi_model.SingleView(model_params={'random_state':0})
+# launch_network_app(covid_single_view, mo_paths)
 # print(covid_single_view.intercept_)

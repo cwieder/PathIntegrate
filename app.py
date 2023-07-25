@@ -58,7 +58,7 @@ hierarchy_hsa_all = pd.concat([hierarchy_hsa, pd.DataFrame([hierarchy_hsa_parent
 # the default graph is the pathway hierarchy coloured by root pathway membership as defined by Reactome
 G = nx.from_pandas_edgelist(hierarchy_hsa, source=0, target=1, create_using=nx.DiGraph())
 hierarchy_hsa_all['Root'] = [find_root(G, i) for i in hierarchy_hsa_all[1]]
-root_cmap = dict(zip(set(hierarchy_hsa_all['Root']), sns.color_palette("hls", len(set(hierarchy_hsa_all['Root']))).as_hex()))
+root_cmap = dict(zip(set(hierarchy_hsa_all['Root']), sns.color_palette("husl", len(set(hierarchy_hsa_all['Root']))).as_hex()))
 cy_mo = nx.readwrite.json_graph.cytoscape_data(G)
 
 
@@ -346,7 +346,7 @@ def update_bar_chart(pathway):
                 pass
 
         pathway_df_molec = pd.concat(pathways_dfs, axis=1)
-        fig = make_subplots(rows=1, cols=len(pathways_dfs), shared_xaxes=False)
+        fig = make_subplots(rows=1, cols=len(pathways_dfs), shared_xaxes='rows')
 
         for i in range(0, len(pathways_dfs)):
             fig.add_trace(go.Bar(x=pathway_df_molec.index, y=pathway_df_molec.iloc[:,i], name=pathway_df_molec.columns[i]), row=1, col=i+1)
@@ -428,8 +428,6 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
     # style=CONTENT_STYLE
     )
 
-
-        
     app.layout = html.Div([
         navbar,
         sidebar,
