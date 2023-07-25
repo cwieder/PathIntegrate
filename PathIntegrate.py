@@ -107,8 +107,9 @@ class PathIntegrate:
 
     def SingleView(self, model=sklearn.linear_model.LogisticRegression, model_params=None):
         concat_data = pd.concat(self.omics_data.values(), axis=1)
-        self.sspa_scores_sv = self.sspa_method(concat_data, self.pathway_source, self.min_coverage)
-
+        sspa_scores =self.sspa_method(concat_data, self.pathway_source, self.min_coverage, return_molecular_importance=True)
+        self.sspa_scores_sv = sspa_scores[0]
+       
         if model_params:
             sv = model(**model_params)
         else:
@@ -117,6 +118,7 @@ class PathIntegrate:
         sv.sspa_scores = self.sspa_scores_sv
         sv.name = 'SingleView'
         sv.coverage = self.coverage
+        sv.molecular_importances = sspa_scores[1]
         self.sv = sv
 
         return self.sv
@@ -153,17 +155,18 @@ prot = pd.read_csv('data/proteomics_example.csv', index_col=0)
 # load pre-loaded pathways 
 mo_paths = sspa.process_gmt(infile='data/Reactome_Homo_sapiens_pathways_multiomics_R85.gmt')
 
-pi_model = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]}, metadata=prot['Group'], pathway_source=mo_paths, sspa_scoring='svd')
+pi_model = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]}, metadata=prot['Group'], pathway_source=mo_paths, sspa_scoring='svd', min_coverage=2)
 
-covid_multi_view = pi_model.MultiView(ncomp=5)
+# covid_multi_view = pi_model.MultiView(ncomp=5)
 
 # launch the pathwy network explorer on a local server
-launch_network_app(covid_multi_view, mo_paths)
+# launch_network_app(covid_multi_view, mo_paths)
 
 # print(covid_multi_view.A_corrected_)
 # print(covid_multi_view.vip)
 
 # plot_functs.plot_block_importance(covid_multi_view)
 
-# covid_single_view = pi_model.SingleView(model_params={'random_state':0})
+covid_single_view = pi_model.SingleView(model_params={'random_state':0})
+launch_network_app(covid_single_view, mo_paths)
 # print(covid_single_view.intercept_)

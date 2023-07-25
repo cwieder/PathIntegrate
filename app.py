@@ -20,6 +20,8 @@ from datauri import DataURI
 from dash_bootstrap_components._components.Container import Container
 from pathlib import Path
 from dash.exceptions import PreventUpdate
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 
 
 # Save downloads to default Downloads folder
@@ -329,9 +331,11 @@ def download_network(n_clicks):
     return nx.write_gml(MO_graph, download_path)
 
     
-@app.callback(Output("fig_molecular", "figure"), Input("dropdown", "value"))
+@app.callback([Output("fig_molecular", "figure"),
+                Output("pathway_selected", "children")],
+                  Input("dropdown", "value"))
 def update_bar_chart(pathway):
-    if len(molecule_importances) > 1:
+    if modelname == 'MultiView':
         pathways_dfs = []
         for k, v in molecule_importances.items():
             try:
@@ -342,12 +346,17 @@ def update_bar_chart(pathway):
                 pass
 
         pathway_df_molec = pd.concat(pathways_dfs, axis=1)
-        print(pathway_df_molec)
-        fig = px.bar(pathway_df_molec.melt(), x='variable', y='value')
+        fig = make_subplots(rows=1, cols=len(pathways_dfs), shared_xaxes=False)
+
+        for i in range(0, len(pathways_dfs)):
+            fig.add_trace(go.Bar(x=pathway_df_molec.index, y=pathway_df_molec.iloc[:,i], name=pathway_df_molec.columns[i]), row=1, col=i+1)
+ 
+        return fig, name_dict[pathway]
     else:
         pathway_df_molec = molecule_importances[pathway]
-        fig = px.bar(pathway_df_molec, x=pathway_df_molec, y='loadings')
-    return fig
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=pathway_df_molec.index.tolist(), y=pathway_df_molec['loadings']))
+        return fig, name_dict[pathway]
 # molecule level vis
 # @app.callback(
 #     Output("bar-plot", "figure"), 
@@ -364,9 +373,9 @@ def update_bar_chart(pathway):
 # start local server
 def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
     global pathways_accessible
-    pathways_accessible = list(set(sum([i.columns.tolist() for i in pi_model.sspa_scores.values()], [])))
 
     # Add model attributes to network
+    global name_dict
     name_dict = dict(zip(pathway_source.index, pathway_source['Pathway_name']))
     G.add_nodes_from([(node, {'Name': attr, 'label': attr}) for (node, attr) in name_dict.items()])
     G.add_nodes_from([(node, {'Root': attr, 
@@ -375,7 +384,11 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
                               'RootName': name_dict[attr]}) for (node, attr) in dict(zip(hierarchy_hsa_all[1], hierarchy_hsa_all['Root'])).items()])
     G.add_nodes_from([(node, {'MO_coverage': attr}) for (node, attr) in pi_model.coverage.items()])
 
+    global modelname
+    modelname = pi_model.name
+
     if pi_model.name == 'MultiView':
+        pathways_accessible = list(set(sum([i.columns.tolist() for i in pi_model.sspa_scores.values()], [])))
         # add beta as node colour
         betas_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.beta, 'RdBu')))
         G.add_nodes_from([(node, {'BetaColour': attr}) for (node, attr) in betas_cmap.items()])
@@ -383,6 +396,16 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
         # add vip as node colour
         vip_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.vip['VIP_scaled'].tolist(), 'Blues')))
         G.add_nodes_from([(node, {'VIPColour': attr}) for (node, attr) in vip_cmap.items()])
+
+    if pi_model.name == 'SingleView':
+        pathways_accessible = pi_model.sspa_scores.columns.tolist()
+        # add beta as node colour
+        # betas_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.beta, 'RdBu')))
+        # G.add_nodes_from([(node, {'BetaColour': attr}) for (node, attr) in betas_cmap.items()])
+
+        # # add vip as node colour
+        # vip_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.vip['VIP_scaled'].tolist(), 'Blues')))
+        # G.add_nodes_from([(node, {'VIPColour': attr}) for (node, attr) in vip_cmap.items()])
 
     # add molecular importances for plotting
     global molecule_importances
@@ -417,10 +440,15 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
             ]),
             dcc.Tab(label='Molecular importance', children=[
                 html.Div([
-                    "Single dynamic Dropdown",
+                    html.Br(),
+                    html.H4(
+                    "Select a pathway from the dropdown menu to view molecular importance:"),
                     dcc.Dropdown(pathways_accessible,
+                                 pathways_accessible[0],
                                  placeholder="Select a pathway",
-                    id="dropdown")
+                    id="dropdown"),
+                    html.Br(),
+                    html.P(id="pathway_selected")
                 ]),
                 dcc.Graph(id="fig_molecular"),
                 
