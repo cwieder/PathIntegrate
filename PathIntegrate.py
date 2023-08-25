@@ -6,65 +6,18 @@ from mbpls.mbpls import MBPLS
 import plot_functs
 from app import launch_network_app
 from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-
-
-def sspa_svd(mat, pathway_df, min_entity=2, return_molecular_importance=False):
-
-    """
-    Tomfohr et al 2004 SVD/PLAGE method for single sample pathway analysis
-
-    Args:
-        mat (pd.DataFrame): pandas DataFrame omics data matrix consisting of m rows (samples) and n columns (entities).
-        Do not include metadata columns
-        pathways (pd.DataFrame): Dictionary of pathway identifiers (keys) and corresponding list of pathway entities (values).
-        Entity identifiers must match those in the matrix columns
-        min_entity (int): minimum number of metabolites mapping to pathways for ssPA to be performed
-        return_molecular_importance (bool): if True, return molecular importances based on loadings from PCA
-
-    Returns:
-        pandas DataFrame of pathway scores derived using the PLAGE method. Columns represent pathways and rows represent samples.
-    """
-    pathways = sspa.utils.pathwaydf_to_dict(pathway_df)
-
-    pathway_activities = []
-    molecular_importance = {}
-
-    # Create pathway matrices
-    pathway_ids = []
-    for pathway, compounds in pathways.items():
-        single_pathway_matrix = mat.drop(mat.columns.difference(compounds), axis=1)
-
-        if single_pathway_matrix.shape[1] >= min_entity:
-            pathway_ids.append(pathway)
-            pathway_mat = single_pathway_matrix.T.values
-
-            pca = PCA(n_components=1, random_state=0)
-            
-            pathway_activities.append(pca.fit_transform(single_pathway_matrix)[:, 0])
-            loadings = pca.components_[0]
-            molecular_importance[pathway] = pd.DataFrame(loadings, index=single_pathway_matrix.columns, columns=['loadings'])
-
-    pathway_activities_df = pd.DataFrame(pathway_activities, columns=mat.index, index=pathway_ids).T
-    
-    if return_molecular_importance:
-        return [pathway_activities_df, molecular_importance]
-    else:
-        return pathway_activities_df
-
 
 class PathIntegrate:
 
-    def __init__(self, omics_data:dict, metadata, pathway_source, sspa_scoring='svd', min_coverage=5):
+    def __init__(self, omics_data:dict, metadata, pathway_source, sspa_scoring='svd', min_coverage=3):
         self.omics_data = omics_data
         self.metadata = metadata
         self.pathway_source = pathway_source
         self.pathway_dict = sspa.utils.pathwaydf_to_dict(pathway_source)
         self.sspa_scoring = sspa_scoring
         self.min_coverage = min_coverage
-        
-            # CHANGE BACK TO NORMAL SSPA 
-        sspa_methods = {'svd': sspa_svd, 'ssGSEA': sspa.sspa_ssGSEA, 'kpca': sspa.sspa_kpca, 'ssClustPA': sspa.sspa_ssClustPA, 'zscore': sspa.sspa_zscore}
+
+        sspa_methods = {'svd': sspa.sspa_SVD, 'ssGSEA': sspa.sspa_ssGSEA, 'kpca': sspa.sspa_KPCA, 'ssClustPA': sspa.sspa_ssClustPA, 'zscore': sspa.sspa_zscore}
         self.sspa_method = sspa_methods[self.sspa_scoring]
         self.sspa_scores_mv = None
         self.sspa_scores_sv = None
@@ -82,9 +35,10 @@ class PathIntegrate:
 
     def MultiView(self, ncomp=2):
         print('Generating pathway scores...')
-        sspa_scores = [self.sspa_method(i, self.pathway_source, self.min_coverage, return_molecular_importance=True) for i in self.omics_data.values()]
-        self.sspa_scores_mv = dict(zip(self.omics_data.keys(), [i[0] for i in sspa_scores]))
-        # self.sspa_scores_mv = {k: self.sspa_method(v, self.pathway_source, self.min_coverage) for k, v in self.omics_data.items()}
+        sspa_scores = [self.sspa_method(self.pathway_source, self.min_coverage).fit_transform(i) for i in self.omics_data.values()]
+        # sspa_scores = [self.sspa_method(i, self.pathway_source, self.min_coverage, return_molecular_importance=True) for i in self.omics_data.values()]
+
+        self.sspa_scores_mv = dict(zip(self.omics_data.keys(), sspa_scores))
         print('Fitting MultiView model')
         mv = MBPLS(n_components=ncomp)
         mv.fit([i.copy(deep=True) for i in self.sspa_scores_mv.values()], self.labels)
@@ -97,7 +51,10 @@ class PathIntegrate:
         vip_df['VIP_scaled'] = vip_df.groupby('Source')[0].transform(lambda x: StandardScaler().fit_transform(x.values[:,np.newaxis]).ravel())
 
         mv.name = 'MultiView'
-        mv.molecular_importances = dict(zip(self.omics_data.keys(), [i[1] for i in sspa_scores]))
+
+        # only some sspa methods can return the molecular importance
+        if hasattr(sspa_scores[0], 'molecular_importance'):
+            mv.molecular_importances = dict(zip(self.omics_data.keys(), [i.molecular_importance for i in sspa_scores]))
         mv.beta = mv.beta_.flatten()
         mv.vip = vip_df
         mv.omics_names = list(self.omics_data.keys())
@@ -108,11 +65,20 @@ class PathIntegrate:
         return self.mv
 
     def SingleView(self, model=sklearn.linear_model.LogisticRegression, model_params=None):
+        """Fits a PathIntegrate SingleView model using an SKLearn-compatible predictive model.
+
+        Args:
+            model (object, optional): SKlearn prediction model class. Defaults to sklearn.linear_model.LogisticRegression.
+            model_params (_type_, optional): Model-specific hyperparameters. Defaults to None.
+
+        Returns:
+            object: Fitted PathIntegrate SingleView model.
+        """
         concat_data = pd.concat(self.omics_data.values(), axis=1)
         print('Generating pathway scores...')
 
-        sspa_scores =self.sspa_method(concat_data, self.pathway_source, self.min_coverage, return_molecular_importance=True)
-        self.sspa_scores_sv = sspa_scores[0]
+        sspa_scores = self.sspa_method(self.pathway_source, self.min_coverage).fit_transform(concat_data)
+        self.sspa_scores_sv = sspa_scores
        
         if model_params:
             sv = model(**model_params)
@@ -124,15 +90,28 @@ class PathIntegrate:
         sv.sspa_scores = self.sspa_scores_sv
         sv.name = 'SingleView'
         sv.coverage = self.coverage
-        sv.molecular_importances = sspa_scores[1]
+
+        # only some sspa methods can return the molecular importance
+        if hasattr(sspa_scores, 'molecular_importance'):
+            sv.molecular_importance = sspa_scores.molecular_importance
         self.sv = sv
 
         return self.sv
     
     # cross-validation approaches
+    def SingleViewCV(self):
+        pass
 
     def MultiViewCV(self):
+        # Set up sklearn pipeline
+        pipe_mv = sklearn.pipeline.Pipeline([
+            ('mbpls', MBPLS(n_components=2))
+        ])
         pass
+
+        # Set up cross-validation
+
+
 
 def VIP_multiBlock(x_weights, x_superscores, x_loadings, y_loadings):
     # stack the weights from all blocks 

@@ -22,6 +22,7 @@ from pathlib import Path
 from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+import cmcrameri as cmc
 
 
 # Save downloads to default Downloads folder
@@ -113,7 +114,7 @@ sidebar = html.Div(
     clearable=False,
     options=[
         {'label': name.capitalize(), 'value': name}
-        for name in ['hierarchy', 'beta', 'VIP']
+        for name in ['hierarchy', 'beta', 'VIP', 'P-value']
     ]),
     # html.P(
     #     "Show omics"
@@ -245,7 +246,7 @@ def update_layout(layout):
 @app.callback(Output('mo_graph', 'stylesheet'),
               Input('dropdown-update-node-color', 'value'))
 def update_stylesheet(node_value):
-    node_value_color = {'hierarchy': 'data(color)', 'beta': 'data(BetaColour)', 'VIP': 'data(VIPColour)'}
+    node_value_color = {'hierarchy': 'data(color)', 'beta': 'data(BetaColour)', 'VIP': 'data(VIPColour)', 'P-value': 'data(PvalColour)'}
 
     new_styles = [
         {
@@ -371,7 +372,7 @@ def update_bar_chart(pathway):
 
 
 # start local server
-def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
+def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p_values=None, **kwargs):
     global pathways_accessible
 
     # Add model attributes to network
@@ -382,7 +383,10 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
                               'RootCol': root_cmap[attr], 
                               'color': root_cmap[attr], 
                               'RootName': name_dict[attr]}) for (node, attr) in dict(zip(hierarchy_hsa_all[1], hierarchy_hsa_all['Root'])).items()])
-    G.add_nodes_from([(node, {'MO_coverage': attr}) for (node, attr) in pi_model.coverage.items()])
+    G.add_nodes_from([(node, {'MO_coverage': np.sqrt(attr)*2.5}) for (node, attr) in pi_model.coverage.items()])
+    if p_values:
+        pval_cmap = dict(zip(p_values.keys(), get_hex_colors(p_values.values(), 'cmc.lajolla_r')))
+        G.add_nodes_from([(node, {'PvalColour': attr}) for (node, attr) in pval_cmap.items()])
 
     global modelname
     modelname = pi_model.name
@@ -465,7 +469,7 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded'):
     #                         sidebar2,
     #                         ]),],fluid=True)
     # app.layout = html.Div([dcc.Location(id="url"), navbar, sidebar, content, sidebar2])
-    app.run_server(debug=True, use_reloader=True)
+    app.run_server(debug=True, use_reloader=False)
 
 
  
