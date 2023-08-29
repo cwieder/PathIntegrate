@@ -358,7 +358,7 @@ def update_bar_chart(pathway):
     else:
         pathway_df_molec = molecule_importances[pathway]
         fig = go.Figure()
-        fig.add_trace(go.Bar(x=pathway_df_molec.index.tolist(), y=pathway_df_molec['loadings']))
+        fig.add_trace(go.Bar(x=pathway_df_molec.index.tolist(), y=pathway_df_molec['PC1_Loadings']))
         return fig, name_dict[pathway]
 # molecule level vis
 # @app.callback(
@@ -415,8 +415,8 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
 
     # add molecular importances for plotting
     global molecule_importances
-    molecule_importances = pi_model.molecular_importances
-
+    if hasattr(pi_model, 'molecular_importance'):
+        molecule_importances = pi_model.molecular_importance
     
     # only show nodes with sufficient coverage
     global MO_graph
@@ -471,7 +471,7 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
     #                         sidebar2,
     #                         ]),],fluid=True)
     # app.layout = html.Div([dcc.Location(id="url"), navbar, sidebar, content, sidebar2])
-    app.run_server(debug=True, use_reloader=False)
+    app.run(debug=False, use_reloader=False)
 
 
  

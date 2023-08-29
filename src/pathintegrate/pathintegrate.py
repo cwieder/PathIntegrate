@@ -12,6 +12,7 @@ class PathIntegrate:
 
     def __init__(self, omics_data:dict, metadata, pathway_source, sspa_scoring=sspa.sspa_SVD, min_coverage=3):
         self.omics_data = omics_data
+        self.omics_data_scaled = {k: pd.DataFrame(StandardScaler().fit_transform(v), columns=v.columns, index=v.index) for k, v in self.omics_data.items()}
         self.metadata = metadata
         self.pathway_source = pathway_source
         self.pathway_dict = sspa.utils.pathwaydf_to_dict(pathway_source)
@@ -36,7 +37,7 @@ class PathIntegrate:
 
     def MultiView(self, ncomp=2):
         print('Generating pathway scores...')
-        sspa_scores = [self.sspa_method(self.pathway_source, self.min_coverage).fit_transform(i) for i in self.omics_data.values()]
+        sspa_scores = [self.sspa_method(self.pathway_source, self.min_coverage).fit_transform(i) for i in self.omics_data_scaled.values()]
         # sspa_scores = [self.sspa_method(i, self.pathway_source, self.min_coverage, return_molecular_importance=True) for i in self.omics_data.values()]
 
         self.sspa_scores_mv = dict(zip(self.omics_data.keys(), sspa_scores))
@@ -75,11 +76,11 @@ class PathIntegrate:
         Returns:
             object: Fitted PathIntegrate SingleView model.
         """
-        concat_data = pd.concat(self.omics_data.values(), axis=1)
+        concat_data = pd.concat(self.omics_data_scaled.values(), axis=1)
         print('Generating pathway scores...')
 
-        sspa_scores = self.sspa_method(self.pathway_source, self.min_coverage).fit_transform(concat_data)
-        self.sspa_scores_sv = sspa_scores
+        sspa_scores = self.sspa_method(self.pathway_source, self.min_coverage)
+        self.sspa_scores_sv = sspa_scores.fit_transform(concat_data)
        
         if model_params:
             sv = model(**model_params)
