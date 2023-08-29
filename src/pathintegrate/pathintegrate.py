@@ -101,27 +101,35 @@ class PathIntegrate:
         return self.sv
     
     # cross-validation approaches
-    def SingleViewCV(self, model=sklearn.linear_model.LogisticRegression, model_params=None, **kwargs):
-        # Set up sklearn pipeline
+    def SingleViewCV(self, model=sklearn.linear_model.LogisticRegression, model_params=None, cv_params=None):
 
+        # concatenate omics - unscaled to avoid data leakage
+        concat_data = pd.concat(self.omics_data.values(), axis=1)
+
+        # Set up sklearn pipeline
         pipe_sv = sklearn.pipeline.Pipeline([
-            ('Scaler', StandardScaler()),
+            ('Scaler', StandardScaler().set_output(transform="pandas")),
             ('sspa', self.sspa_method(self.pathway_source, self.min_coverage)),
             ('sv', model(**model_params))
         ])
 
-        cv_res = cross_val_score(pipe_sv, X=self.omics_data, y=self.labels, **kwargs)
+        cv_res = cross_val_score(pipe_sv, X=concat_data, y=self.labels, **cv_params)
         return cv_res
     
-    def SingleViewGridSearchCV(self, param_grid, **kwargs):
+    def SingleViewGridSearchCV(self, param_grid, model=sklearn.linear_model.LogisticRegression, grid_search_params=None):
+        # concatenate omics - unscaled to avoid data leakage
+        concat_data = pd.concat(self.omics_data.values(), axis=1)
+
         # Set up sklearn pipeline
         pipe_sv = sklearn.pipeline.Pipeline([
-            ('Scaler', StandardScaler()),
-            ('sspa', self.sspa_method(self.pathway_source, self.min_coverage))
+            ('Scaler', StandardScaler().set_output(transform="pandas")),
+            ('sspa', self.sspa_method(self.pathway_source, self.min_coverage)),
+            ('sv', model())
         ])
 
         # Set up cross-validation
-        grid_search = GridSearchCV(pipe_sv, param_grid=param_grid, **kwargs)
+        grid_search = GridSearchCV(pipe_sv, param_grid=param_grid, **grid_search_params)
+        grid_search.fit(X=concat_data, y=self.labels)
         return grid_search
 
     def MultiViewCV(self):
