@@ -16,7 +16,7 @@ setup(
     description='PathIntegrate: multivariate modelling approaches for pathway-based muti-omics integration',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    package_data={'pathintegrate': ['example_data/*', 'pathway_databases/*', 'data/*']},
+    package_data={'pathintegrate': ['data/*']},
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
