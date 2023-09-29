@@ -25,6 +25,7 @@ setup(
     install_requires=[
         'pandas',
         'scikit-learn',
+        'cmcrameri',
         'numpy',
         'setuptools',
         'scipy',
