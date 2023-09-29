@@ -18,7 +18,7 @@ PathIntegrate Python package for pathway-based multi-omics data integration
 
 ## Installation
 ```bash
-pip install -i https://test.pypi.org/simple/ PathIntegrate==0.0.1
+pip install -i https://test.pypi.org/simple/ PathIntegrate
 ```
 
 ## Tutorials and documentation
