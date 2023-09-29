@@ -30,5 +30,14 @@ setup(
         'scipy',
         'statsmodels',
         'sspa',
+        'mbpls',
+        'matplotlib',
+        'seaborn',
+        'dash_cytoscape',
+        'plotly',
+        'networkx',
+        'dash_bootstrap_components',
+        'dash'
+
     ],
 )
