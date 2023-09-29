@@ -62,6 +62,8 @@ hierarchy_hsa_all = pd.concat([hierarchy_hsa, pd.DataFrame([hierarchy_hsa_parent
 G = nx.from_pandas_edgelist(hierarchy_hsa, source=0, target=1, create_using=nx.DiGraph())
 hierarchy_hsa_all['Root'] = [find_root(G, i) for i in hierarchy_hsa_all[1]]
 root_cmap = dict(zip(set(hierarchy_hsa_all['Root']), sns.color_palette("husl", len(set(hierarchy_hsa_all['Root']))).as_hex()))
+#save cmap to csv
+pd.DataFrame.from_dict(root_cmap, orient='index').to_csv('root_cmap.csv')
 cy_mo = nx.readwrite.json_graph.cytoscape_data(G)
 
 
@@ -142,38 +144,6 @@ sidebar = html.Div(
 )
 
 
-sidebar2 = html.Div(
-    [html.P("Node information"),
-    html.Hr(),
-    dbc.ListGroup(
-    [
-        dbc.ListGroupItem(
-            html.Div(
-                [html.P("Pathway name"), html.P(id='cytoscape-mouseoverNodeData-output-name')
-                ])),
-        dbc.ListGroupItem(html.Div(
-                [html.P("Parent pathway"), html.P(id='cytoscape-mouseoverNodeData-output-root')
-                ])),
-        dbc.ListGroupItem(html.Div(
-                [html.P("Coverage"), html.P(id='cytoscape-mouseoverNodeData-output-coverage')
-                ])),
-    ]),
-
-    html.Br(),
-
-    ],
-    style={
-    "position": "fixed",
-    "top": 0,
-    "right": 0,
-    "bottom": 0,
-    "width": "16rem",
-    "padding": "1rem",
-    "padding-top": "5rem",
-    "background-color": "#BBDEFB",
-},
-)
-
 
 
 navbar = dbc.NavbarSimple(
@@ -215,7 +185,7 @@ default_stylesheet = [
         'style': {
             'background-color': 'data(color)',
             'shape': 'ellipse',
-            'label': 'data(label)',
+            # 'label': 'data(label)',
             'text-wrap': 'wrap',
             'text-background-color': 'yellow',
             'text-max-width': '120px',
@@ -223,7 +193,7 @@ default_stylesheet = [
             'height':'data(MO_coverage)',
             'text-justification': 'auto',
             'font-family': ['Verdana', 'Roboto', 'Arial'],
-            'font-size': '10px'
+            'font-size': '0px'
         }
     },
     {
@@ -290,7 +260,7 @@ def displayTapNodeData(data):
               Input('mo_graph', 'mouseoverNodeData'))
 def displayTapNodeData(data):
     if data:
-        return data['MO_coverage']
+        return data['Coverage']
 
 
 # Download image
@@ -381,14 +351,6 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
     global name_dict
     name_dict = dict(zip(pathway_source.index, pathway_source['Pathway_name']))
     G.add_nodes_from([(node, {'Name': attr, 'label': attr}) for (node, attr) in name_dict.items()])
-    G.add_nodes_from([(node, {'Root': attr, 
-                              'RootCol': root_cmap[attr], 
-                              'color': root_cmap[attr], 
-                              'RootName': name_dict[attr]}) for (node, attr) in dict(zip(hierarchy_hsa_all[1], hierarchy_hsa_all['Root'])).items()])
-    G.add_nodes_from([(node, {'MO_coverage': np.sqrt(attr)*2.5}) for (node, attr) in pi_model.coverage.items()])
-    if p_values:
-        pval_cmap = dict(zip(p_values.keys(), get_hex_colors(p_values.values(), 'cmc.lajolla_r')))
-        G.add_nodes_from([(node, {'PvalColour': attr}) for (node, attr) in pval_cmap.items()])
 
     global modelname
     modelname = pi_model.name
@@ -412,6 +374,20 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
         # # add vip as node colour
         # vip_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.vip['VIP_scaled'].tolist(), 'Blues')))
         # G.add_nodes_from([(node, {'VIPColour': attr}) for (node, attr) in vip_cmap.items()])
+        #
+    # filter root pathways for pathways accessible by the model
+    hierarchy_hsa_all_filt = hierarchy_hsa_all[hierarchy_hsa_all[1].isin(pathways_accessible)]
+    root_cmap = dict(zip(set(hierarchy_hsa_all_filt['Root']), sns.color_palette("husl", len(set(hierarchy_hsa_all_filt['Root']))).as_hex()))
+
+    G.add_nodes_from([(node, {'Root': attr, 
+                              'RootCol': root_cmap[attr], 
+                              'color': root_cmap[attr], 
+                              'RootName': name_dict[attr]}) for (node, attr) in dict(zip(hierarchy_hsa_all_filt[1], hierarchy_hsa_all_filt['Root'])).items()])
+    G.add_nodes_from([(node, {'MO_coverage': np.sqrt(attr)*2.5}) for (node, attr) in pi_model.coverage.items()])
+    G.add_nodes_from([(node, {'Coverage': attr}) for (node, attr) in pi_model.coverage.items()])
+    if p_values:
+        pval_cmap = dict(zip(p_values.keys(), get_hex_colors(p_values.values(), 'cmc.lajolla_r')))
+        G.add_nodes_from([(node, {'PvalColour': attr}) for (node, attr) in pval_cmap.items()])
 
     # add molecular importances for plotting
     global molecule_importances
@@ -433,6 +409,56 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
         ),
     # style=CONTENT_STYLE
     )
+
+    sidebar2 = html.Div(
+        [html.P("Node information"),
+        html.Hr(),
+        dbc.ListGroup(
+        [
+            dbc.ListGroupItem(
+                html.Div(
+                    [html.P("Pathway name"), html.P(id='cytoscape-mouseoverNodeData-output-name')
+                    ])),
+            dbc.ListGroupItem(html.Div(
+                    [html.P("Parent pathway"), html.P(id='cytoscape-mouseoverNodeData-output-root')
+                    ])),
+            dbc.ListGroupItem(html.Div(
+                    [html.P("Coverage"), html.P(id='cytoscape-mouseoverNodeData-output-coverage')
+                    ])),
+        ]),
+
+        html.Br(),
+        # Legend for node colours 
+        html.P("Node colour legend"),
+        html.Hr(),
+        # make a legend for the root pathway colours
+        html.Div([
+            html.P("Root pathway"),
+            dbc.ListGroup(
+            [
+                dbc.ListGroupItem(
+                    html.Div(
+                        [html.P(i), html.P(name_dict[i])
+                        ], style={'background-color': root_cmap[i]})
+                ) for i in root_cmap.keys()
+            ]),
+        ]),
+        html.Br(),
+
+        ],
+        style={
+        "position": "fixed",
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "width": "16rem",
+        "padding": "1rem",
+        "padding-top": "5rem",
+        "background-color": "#BBDEFB",
+    },
+    )
+
+
 
     app.layout = html.Div([
         navbar,
@@ -471,7 +497,7 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
     #                         sidebar2,
     #                         ]),],fluid=True)
     # app.layout = html.Div([dcc.Location(id="url"), navbar, sidebar, content, sidebar2])
-    app.run(debug=False, use_reloader=False)
+    app.run(debug=True, use_reloader=False)
 
 
  

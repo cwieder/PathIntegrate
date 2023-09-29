@@ -37,7 +37,9 @@ class PathIntegrate:
 
     def MultiView(self, ncomp=2):
         print('Generating pathway scores...')
-        sspa_scores = [self.sspa_method(self.pathway_source, self.min_coverage).fit_transform(i) for i in self.omics_data_scaled.values()]
+        sspa_scores_ = [self.sspa_method(self.pathway_source, self.min_coverage) for i in self.omics_data_scaled.values()]
+        sspa_scores = [sspa_scores_[n].fit_transform(i) for n, i in enumerate(self.omics_data_scaled.values())]
+        # sspa_scores = [self.sspa_method(self.pathway_source, self.min_coverage).fit_transform(i) for i in self.omics_data_scaled.values()]
         # sspa_scores = [self.sspa_method(i, self.pathway_source, self.min_coverage, return_molecular_importance=True) for i in self.omics_data.values()]
 
         self.sspa_scores_mv = dict(zip(self.omics_data.keys(), sspa_scores))
@@ -51,12 +53,12 @@ class PathIntegrate:
         vip_df['Name'] = vip_df.index.map(dict(zip(self.pathway_source.index, self.pathway_source['Pathway_name'])))
         vip_df['Source'] = sum([[k] * v.shape[1] for k, v in self.sspa_scores_mv.items()], [])
         vip_df['VIP_scaled'] = vip_df.groupby('Source')[0].transform(lambda x: StandardScaler().fit_transform(x.values[:,np.newaxis]).ravel())
-
+        vip_df['VIP'] = vip_scores
         mv.name = 'MultiView'
 
         # only some sspa methods can return the molecular importance
-        if hasattr(sspa_scores[0], 'molecular_importance'):
-            mv.molecular_importances = dict(zip(self.omics_data.keys(), [i.molecular_importance for i in sspa_scores]))
+        if hasattr(sspa_scores_[0], 'molecular_importance'):
+            mv.molecular_importance = dict(zip(self.omics_data.keys(), [i.molecular_importance for i in sspa_scores_]))
         mv.beta = mv.beta_.flatten()
         mv.vip = vip_df
         mv.omics_names = list(self.omics_data.keys())
@@ -124,7 +126,7 @@ class PathIntegrate:
         pipe_sv = sklearn.pipeline.Pipeline([
             ('Scaler', StandardScaler().set_output(transform="pandas")),
             ('sspa', self.sspa_method(self.pathway_source, self.min_coverage)),
-            ('sv', model())
+            ('model', model())
         ])
 
         # Set up cross-validation
@@ -135,53 +137,27 @@ class PathIntegrate:
     def MultiViewCV(self):
         # Set up sklearn pipeline
         pipe_mv = sklearn.pipeline.Pipeline([
+            ('sspa', self.sspa_method(self.pathway_source, self.min_coverage)),
             ('mbpls', MBPLS(n_components=2))
         ])
-        pass
 
         # Set up cross-validation
+        cv_res = cross_val_score(pipe_mv, X=[i.copy(deep=True) for i in self.omics_data.values()], y=self.labels)
+        return cv_res
+
+    def MultiViewGridSearchCV(self):
+        pass
 
 
 
 def VIP_multiBlock(x_weights, x_superscores, x_loadings, y_loadings):
     # stack the weights from all blocks 
     weights = np.vstack(x_weights)
-    # normalise the weights
-    weights_norm = weights / np.sqrt(np.sum(weights**2, axis=0))
     # calculate product of sum of squares of superscores and y loadings
     sumsquares = np.sum(x_superscores**2, axis=0) * np.sum(y_loadings**2, axis=0)
     # p = number of variables - stack the loadings from all blocks
     p = np.vstack(x_loadings).shape[0]
     
     # VIP is a weighted sum of squares of PLS weights 
-    vip_scores = np.sqrt(p * np.sum(sumsquares*(weights_norm**2), axis=1) / np.sum(sumsquares))
+    vip_scores = np.sqrt(p * np.sum(sumsquares*(weights**2), axis=1) / np.sum(sumsquares))
     return vip_scores
-
-# metab = pd.read_csv('data/metabolomics_example.csv', index_col=0)
-# prot = pd.read_csv('data/proteomics_example.csv', index_col=0)
-
-# # make possible to download MO paths from reactome
-# # mo_paths = sspa.process_reactome(
-# #     organism='Homo sapiens',
-# #     download_latest=True,
-# #     omics_type='multiomics',
-# #     filepath='data/')
-
-# # load pre-loaded pathways 
-# mo_paths = sspa.process_gmt(infile='data/Reactome_Homo_sapiens_pathways_multiomics_R85.gmt')
-
-# pi_model = PathIntegrate({'Metabolomics': metab, 'Proteomics':prot.iloc[:, :-1]}, metadata=prot['Group'], pathway_source=mo_paths, sspa_scoring='svd', min_coverage=2)
-
-# covid_multi_view = pi_model.MultiView(ncomp=5)
-
-# # launch the pathwy network explorer on a local server
-# launch_network_app(covid_multi_view, mo_paths)
-
-# print(covid_multi_view.A_corrected_)
-# print(covid_multi_view.vip)
-
-# plot_functs.plot_block_importance(covid_multi_view)
-
-# covid_single_view = pi_model.SingleView(model_params={'random_state':0})
-# launch_network_app(covid_single_view, mo_paths)
-# print(covid_single_view.intercept_)
