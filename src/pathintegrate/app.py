@@ -15,8 +15,6 @@ import networkx as nx
 import dash_bootstrap_components as dbc
 import matplotlib.cm as cm
 import matplotlib as matplotlib
-import svgwrite
-from datauri import DataURI
 from dash_bootstrap_components._components.Container import Container
 from pathlib import Path
 from dash.exceptions import PreventUpdate

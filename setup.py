@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name='PathIntegrate',
-    version='0.0.2',
+    version='0.0.3',
     packages=['pathintegrate'],
     package_dir={'':'src'},
     url='https://github.com/cwieder/PathIntegrate',
@@ -30,7 +30,6 @@ setup(
         'scipy',
         'statsmodels',
         'sspa',
-        'mbpls',
         'matplotlib',
         'seaborn',
         'dash_cytoscape',
@@ -38,6 +37,5 @@ setup(
         'networkx',
         'dash_bootstrap_components',
         'dash'
-
     ],
 )
