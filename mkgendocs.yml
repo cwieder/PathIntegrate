@@ -7,9 +7,9 @@ pages:
 
   - page: "reference/pathintegrate.md"
     source: "src/pathintegrate/pathintegrate.py"
-    functions:
-      - MultiView
-      - SingleView
+    # functions:
+    #   - MultiView
+    #   - SingleView
     classes:
       - PathIntegrate
 
