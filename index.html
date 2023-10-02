@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pathintegrate-documentation" class="md-skip">
+        <a href="#pathintegrate" class="md-skip">
           Skip to content
         </a>
       
@@ -219,15 +219,29 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    Overview
+  <a href="#features" class="md-nav__link">
+    Features
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#citing" class="md-nav__link">
-    Citing
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tutorials-and-documentation" class="md-nav__link">
+    Tutorials and documentation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#citing-pathintegrate" class="md-nav__link">
+    Citing PathIntegrate
   </a>
   
 </li>
@@ -330,15 +344,29 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    Overview
+  <a href="#features" class="md-nav__link">
+    Features
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#citing" class="md-nav__link">
-    Citing
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tutorials-and-documentation" class="md-nav__link">
+    Tutorials and documentation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#citing-pathintegrate" class="md-nav__link">
+    Citing PathIntegrate
   </a>
   
 </li>
@@ -357,9 +385,38 @@
                 
 
 
-<h1 id="pathintegrate-documentation">PathIntegrate Documentation</h1>
-<h2 id="overview">Overview</h2>
-<h2 id="citing">Citing</h2>
+<h1 id="pathintegrate">PathIntegrate</h1>
+<p>PathIntegrate Python package for pathway-based multi-omics data integration</p>
+<p><img alt="PathIntegrate graphical abstract" src="ModellingFrameworks_white.png" title="PathIntegrate graphical abstract" /></p>
+<h2 id="features">Features</h2>
+<ul>
+<li>Pathway-based multi-omics data integration using PathIntegrate Multi-View and Single-View models<ul>
+<li>Multi-View model: Integrates multiple omics datasets using a shared pathway-based latent space</li>
+<li>Single-View model: Integrates multi-omics data into one set of multi-omics pathway scores and applies an SKlearn-compatible predictive model</li>
+<li>Pathway importance</li>
+<li>Sample prediction</li>
+</ul>
+</li>
+<li>SKlearn-like API for easy integration into existing pipelines</li>
+<li>Support for multiple pathway databases, including KEGG and Reactome</li>
+<li>Support for multiple pathway scoring methods available via the <a href="https://github.com/cwieder/py-ssPA">sspa</a> package</li>
+<li>Cytoscape Network Viewer app for visualizing pathway-based multi-omics data integration results</li>
+</ul>
+<p><img alt="PathIntegrate Cytoscape app" src="App_network_view.jpg" title="Network viewer" /></p>
+<h2 id="installation">Installation</h2>
+<div class="highlight"><pre><span></span><code>pip install -i https://test.pypi.org/simple/ PathIntegrate
+</code></pre></div>
+<h2 id="tutorials-and-documentation">Tutorials and documentation</h2>
+<p>Please see our Quickstart guide on <a href="https://colab.research.google.com/drive/1nv9lp8mMQ2Yk8n9uI9hBMvH71MlWp3UJ?usp=sharing">Google Colab</a></p>
+<p>Full documentation and function reference for PathIntegrate can be found via our <a href="https://cwieder.github.io/pathintegrate/">ReadTheDocs page</a></p>
+<h2 id="citing-pathintegrate">Citing PathIntegrate</h2>
+<p>If you use PathIntegrate in your research, please cite our paper:
+<div class="highlight"><pre><span></span><code><span class="c">PathIntegrate: Multivariate modelling approaches for pathway-based multi-omics data integration</span><span class="w"></span>
+
+<span class="c">Cecilia Wieder, Juliette Cooke, Clement Frainay, Nathalie Poupin, Jacob G. Bundy, Russell Bowler, Fabien Jourdan, Katerina J. Kechris, Rachel PJ Lai, Timothy Ebbels</span><span class="w"></span>
+
+<span class="c">Manuscript in preparation</span><span class="w"></span>
+</code></pre></div></p>
 
 
 
