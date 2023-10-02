@@ -44,12 +44,13 @@ plugins:
 
 nav:
   - Home: index.md
+  - Input data: input.md
   # - Tutorials: 
   #   - tutorials.md
   #     - ssPA and SKLearn: 
   #       - gendocs_docs/reference/sklearn_sspa.md
-  # - Reference:
-  #   - gendocs_docs/reference/identifier_conversion.md
+  - Reference:
+    - gendocs_docs/reference/pathintegrate.md
   #   - gendocs_docs/reference/download_pathways.md
   #   - gendocs_docs/reference/load_pathways.md
   #   - gendocs_docs/reference/utils.md
