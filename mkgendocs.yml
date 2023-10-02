@@ -1,0 +1,74 @@
+sources_dir: docs/docs/gendocs_docs
+templates_dir: docs/docs/gendocs_templates
+repo: https://github.com/cwieder/pathintegrate
+version: master
+
+pages:
+
+  - page: "reference/pathintegrate.md"
+    source: "src/pathintegrate/pathintegrate.py"
+    functions:
+      - MultiView
+      - SingleView
+    classes:
+      - PathIntegrate
+
+  # - page: "reference/identifier_conversion.md"
+  #   source: "src/sspa/identifier_conversion.py"
+  #   functions:
+  #     - identifier_conversion
+  #     - map_identifiers
+
+  # - page: "reference/load_pathways.md"
+  #   source: "src/sspa/process_pathways.py"
+  #   functions:
+  #     - process_reactome
+  #     - process_kegg
+  #     - process_gmt
+
+  # - page: "reference/utils.md"
+  #   source: "src/sspa/utils.py"
+  #   functions:
+  #     - load_example_data
+  #     - t_tests
+  #     - pathwaydf_to_dict
+
+  # - page: "reference/ORA.md"
+  #   source: "src/sspa/sspa_ora.py"
+  #   classes:
+  #     - sspa_ora
+
+  # - page: "reference/GSEA.md"
+  #   source: "src/sspa/sspa_gsea.py"
+  #   functions:
+  #     - sspa_gsea
+
+  # - page: "reference/SVD.md"
+  #   source: "src/sspa/sspa_svd.py"
+  #   classes:
+  #     - sspa_SVD
+
+  # - page: "reference/kPCA.md"
+  #   source: "src/sspa/sspa_kpca.py"
+  #   classes:
+  #     - sspa_KPCA
+
+  # - page: "reference/ssClustPA.md"
+  #   source: "src/sspa/sspa_cluster.py"
+  #   classes:
+  #     - sspa_ssClustPA
+
+  # # - page: "reference/GSVA.md"
+  # #   source: "src/sspa/sspa_gsva.py"
+  # #   functions:
+  # #     - sspa_gsva
+
+  # - page: "reference/ssGSEA.md"
+  #   source: "src/sspa/sspa_ssGSEA.py"
+  #   classes:
+  #     - sspa_ssGSEA
+
+  # - page: "reference/zscore.md"
+  #   source: "src/sspa/sspa_zscore.py"
+  #   classes:
+  #     - sspa_zscore
