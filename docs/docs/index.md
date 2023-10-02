@@ -24,7 +24,6 @@ pip install -i https://test.pypi.org/simple/ PathIntegrate
 ## Tutorials and documentation
 Please see our Quickstart guide on [Google Colab](https://colab.research.google.com/drive/1nv9lp8mMQ2Yk8n9uI9hBMvH71MlWp3UJ?usp=sharing)
 
-Full documentation and function reference for PathIntegrate can be found via our [ReadTheDocs page](https://cwieder.github.io/pathintegrate/)
 
 ## Citing PathIntegrate
 If you use PathIntegrate in your research, please cite our paper:
