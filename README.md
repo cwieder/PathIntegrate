@@ -3,6 +3,9 @@ PathIntegrate Python package for pathway-based multi-omics data integration
 
 ![PathIntegrate graphical abstract](ModellingFrameworks_white.png "PathIntegrate graphical abstract")
 
+#### Abstract
+>As terabytes of multi-omics data are being generated, there is an ever-increasing need for methods facilitating the integration and interpretation of such data. Current multi-omics integration methods typically output lists, clusters, or subnetworks of molecules related to an outcome. Even with expert domain knowledge, discerning the biological processes involved is a time-consuming activity. Here we propose PathIntegrate, a method for integrating multi-omics datasets based on pathways, designed to exploit knowledge of biological systems and thus provide interpretable models for such studies. PathIntegrate employs single-sample pathway analysis to transform multi-omics datasets from the molecular to the pathway-level, and applies a predictive single-view or multi-view model to integrate the data. Model outputs include multi-omics pathways ranked by their contribution to the outcome prediction, the contribution of each omics layer, and the importance of each molecule in a pathway. 
+
 ## Features
 - Pathway-based multi-omics data integration using PathIntegrate Multi-View and Single-View models
     - Multi-View model: Integrates multiple omics datasets using a shared pathway-based latent space
