@@ -463,19 +463,56 @@
    <span class="n">min_coverage</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="p">)</span>
 </code></pre></div></p>
+<hr />
+<p>PathIntegrate class for multi-omics pathway integration.</p>
+<p><strong>Args</strong></p>
+<ul>
+<li><strong>omics_data</strong> (dict) : Dictionary of omics data. Keys are omics names, values are pandas DataFrames containing omics data where rows contain samples and columns reprsent features.</li>
+<li><strong>metadata</strong> (pandas.Series) : Metadata for samples. Index is sample names, values are class labels.</li>
+<li><strong>pathway_source</strong> (pandas.DataFrame) : GMT style pathway source data. Must contain column 'Pathway_name'. </li>
+<li><strong>sspa_scoring</strong> (object, optional) : Scoring method for ssPA. Defaults to sspa.sspa_SVD. Options are sspa.sspa_SVD, sspa.sspa_ssGSEA, sspa.sspa_KPCA, sspa.sspa_ssClustPA, sspa.sspa_zscore.</li>
+<li><strong>min_coverage</strong> (int, optional) : Minimum number of molecules required in a pathway. Defaults to 3.</li>
+</ul>
+<p><strong>Attributes</strong></p>
+<ul>
+<li><strong>omics_data</strong> (dict) : Dictionary of omics data. Keys are omics names, values are pandas DataFrames.</li>
+<li><strong>omics_data_scaled</strong> (dict) : Dictionary of omics data scaled to mean 0 and unit variance. Keys are omics names, values are pandas DataFrames.</li>
+<li><strong>metadata</strong> (pandas.Series) : Metadata for samples. Index is sample names, values are class labels.</li>
+<li><strong>pathway_source</strong> (pandas.DataFrame) : Pathway source data.</li>
+<li><strong>pathway_dict</strong> (dict) : Dictionary of pathways. Keys are pathway names, values are lists of molecules.</li>
+<li><strong>sspa_scoring</strong> (object) : Scoring method for SSPA.</li>
+<li><strong>min_coverage</strong> (int) : Minimum number of omics required to cover a pathway.</li>
+<li><strong>sspa_method</strong> (object) : SSPA scoring method.</li>
+<li><strong>sspa_scores_mv</strong> (dict) : Dictionary of SSPA scores for each omics data. Keys are omics names, values are pandas DataFrames.</li>
+<li><strong>sspa_scores_sv</strong> (pandas.DataFrame) : SSPA scores for all omics data concatenated.</li>
+<li><strong>coverage</strong> (dict) : Dictionary of pathway coverage. Keys are pathway names, values are number of omics covering the pathway.</li>
+<li><strong>mv</strong> (object) : Fitted MultiView model.</li>
+<li><strong>sv</strong> (object) : Fitted SingleView model.</li>
+<li><strong>labels</strong> (pandas.Series) : Class labels for samples. Index is sample names, values are class labels.</li>
+</ul>
 <p><strong>Methods:</strong></p>
 <h3 id="get_multi_omics_coverage">.get_multi_omics_coverage</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L33">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L58">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">get_multi_omics_coverage</span><span class="p">()</span>
 </code></pre></div></p>
 <h3 id="multiview">.MultiView</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L38">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L63">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">MultiView</span><span class="p">(</span>
    <span class="n">ncomp</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="p">)</span>
 </code></pre></div></p>
+<hr />
+<p>Fits a PathIntegrate MultiView model using MBPLS.</p>
+<p><strong>Args</strong></p>
+<ul>
+<li><strong>ncomp</strong> (int, optional) : Number of components. Defaults to 2.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<ul>
+<li><strong>object</strong>  : Fitted PathIntegrate MultiView model.</li>
+</ul>
 <h3 id="singleview">.SingleView</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L71">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L105">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">SingleView</span><span class="p">(</span>
    <span class="n">model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegression</span><span class="p">,</span> <span class="n">model_params</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span>
@@ -492,25 +529,55 @@
 <li><strong>object</strong>  : Fitted PathIntegrate SingleView model.</li>
 </ul>
 <h3 id="singleviewcv">.SingleViewCV</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L106">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L141">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">SingleViewCV</span><span class="p">(</span>
    <span class="n">model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegression</span><span class="p">,</span> <span class="n">model_params</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
    <span class="n">cv_params</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span>
 </code></pre></div></p>
+<hr />
+<p>Cross-validation for SingleView model.</p>
+<p><strong>Args</strong></p>
+<ul>
+<li><strong>model</strong> (object, optional) : SKlearn prediction model class. Defaults to sklearn.linear_model.LogisticRegression.</li>
+<li><strong>model_params</strong> (<em>type</em>, optional) : Model-specific hyperparameters. Defaults to None.</li>
+<li><strong>cv_params</strong> (dict, optional) : Cross-validation parameters. Defaults to None.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<ul>
+<li><strong>object</strong>  : Cross-validation results.</li>
+</ul>
 <h3 id="singleviewgridsearchcv">.SingleViewGridSearchCV</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L121">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L166">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">SingleViewGridSearchCV</span><span class="p">(</span>
    <span class="n">param_grid</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegression</span><span class="p">,</span>
    <span class="n">grid_search_params</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span>
 </code></pre></div></p>
+<hr />
+<p>Grid search cross-validation for SingleView model.</p>
+<p><strong>Args</strong></p>
+<ul>
+<li><strong>param_grid</strong> (dict) : Grid search parameters.</li>
+<li><strong>model</strong> (object, optional) : SKlearn prediction model class. Defaults to sklearn.linear_model.LogisticRegression.</li>
+<li><strong>grid_search_params</strong> (dict, optional) : Grid search parameters. Defaults to None.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<ul>
+<li><strong>object</strong>  : GridSearchCV object.</li>
+</ul>
 <h3 id="multiviewcv">.MultiViewCV</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L137">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L193">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">MultiViewCV</span><span class="p">()</span>
 </code></pre></div></p>
+<hr />
+<p>Cross-validation for MultiView model.</p>
+<p><strong>Returns</strong></p>
+<ul>
+<li><strong>object</strong>  : Cross-validation results.</li>
+</ul>
 <h3 id="multiviewgridsearchcv">.MultiViewGridSearchCV</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L148">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L210">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">MultiViewGridSearchCV</span><span class="p">()</span>
 </code></pre></div></p>
 
