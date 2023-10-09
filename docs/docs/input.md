@@ -5,6 +5,9 @@ Each multi-omics dataset should be in the form of a pandas DataFrame with sample
 
 The molecule IDs should match those of the desired pathway database (i.e. ChEBI IDs, UniProt IDs, and ENSEMBL genes for Reactome; and KEGG IDs for KEGG). The values in the DataFrame should be the molecule abundances for each sample. 
 
+!!! note
+
+    The omics data should be pre-processed before inputting into PathIntegrate. PathIntgrate will automatically standardise the data, but it is recommended to log-transform the data before inputting into PathIntegrate.
 
 
 | sample_id   | 1372     | 16610    | 72665    | 30915    | 37373    | Group     |
@@ -24,6 +27,10 @@ Pathways should be in the form of a pandas DataFrame with pathways as rows and m
 Pathways can be from any pathway database, but the molecule IDs should match those of the omics data.
 
 Each pathway can either contain molecules from a single omics, or a combination of omics.
+
+!!! note
+
+    Pathways can be downloaded using the [sspa package](github.com/cwieder/py-ssPA)
 
 |   | Pathway_name | 0      | 1      | 2      | 3      | 4      |
 | - | ------------ | ------ | ------ | ------ | ------ | ------ |

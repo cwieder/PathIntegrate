@@ -1,7 +1,7 @@
 # PathIntegrate
 PathIntegrate Python package for pathway-based multi-omics data integration
 
-![PathIntegrate graphical abstract](ModellingFrameworks_white.png "PathIntegrate graphical abstract")
+![PathIntegrate graphical abstract](images/ModellingFrameworks_white.png "PathIntegrate graphical abstract")
 
 ## Features
 - Pathway-based multi-omics data integration using PathIntegrate Multi-View and Single-View models
