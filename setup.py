@@ -23,7 +23,7 @@ setup(
         'Programming Language :: Python :: 3.10',
     ],
     install_requires=[
-        'cmcrameri~=1.7',
+        'cmcrameri~=1.3',
         'dash~=2.14.1',
         'dash_bootstrap_components~=1.5.0',
         'dash_cytoscape~=0.3.0',
