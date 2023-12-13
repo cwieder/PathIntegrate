@@ -19,6 +19,13 @@ PathIntegrate Python package for pathway-based multi-omics data integration
 
 ![PathIntegrate Cytoscape app](App_network_view.jpg "Network viewer")
 
+## System requirements
+### Hardware
+At least 8BG RAM recommended. PathIntegrate models can run on a Google Colab notebook server (see walkthrough tutorial below with example data).
+
+### Software
+PathIntegrate has been tested on MacOs, Windows 10 and Linux. Python 3.10 or higher is required. Python dependencies are listed in the requirements.txt file.
+
 ## Installation
 ```bash
 pip install PathIntegrate
@@ -30,7 +37,7 @@ Please see our Quickstart guide on [Google Colab](https://colab.research.google.
 Full documentation and function reference for PathIntegrate can be found via our [ReadTheDocs page](https://cwieder.github.io/PathIntegrate/)
 
 ## Citing PathIntegrate
-If you use PathIntegrate in your research, please cite our paper:
+If you use PathIntegrate in your research, please consider citing our paper:
 ```bibtex
 PathIntegrate: Multivariate modelling approaches for pathway-based multi-omics data integration
 
@@ -38,3 +45,6 @@ Cecilia Wieder, Juliette Cooke, Clement Frainay, Nathalie Poupin, Jacob G. Bundy
 
 Manuscript in preparation
 ```
+
+## License
+GNU GPL v3
