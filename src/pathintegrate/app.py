@@ -60,8 +60,7 @@ hierarchy_hsa_all = pd.concat([hierarchy_hsa, pd.DataFrame([hierarchy_hsa_parent
 G = nx.from_pandas_edgelist(hierarchy_hsa, source=0, target=1, create_using=nx.DiGraph())
 hierarchy_hsa_all['Root'] = [find_root(G, i) for i in hierarchy_hsa_all[1]]
 root_cmap = dict(zip(set(hierarchy_hsa_all['Root']), sns.color_palette("husl", len(set(hierarchy_hsa_all['Root']))).as_hex()))
-#save cmap to csv
-pd.DataFrame.from_dict(root_cmap, orient='index').to_csv('root_cmap.csv')
+
 cy_mo = nx.readwrite.json_graph.cytoscape_data(G)
 
 
