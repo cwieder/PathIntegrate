@@ -13,11 +13,11 @@ PathIntegrate Python package for pathway-based multi-omics data integration
     - Pathway importance
     - Sample prediction
 - SKlearn-like API for easy integration into existing pipelines
-- Support for multiple pathway databases, including KEGG and Reactome
+- Support for multiple pathway databases, including KEGG, Reactome, PathBank, and custom GMT files 
 - Support for multiple pathway scoring methods available via the [sspa](https://github.com/cwieder/py-ssPA) package
 - Cytoscape Network Viewer app for visualizing pathway-based multi-omics data integration results
 
-![PathIntegrate Cytoscape app](App_network_view.jpg "Network viewer")
+![PathIntegrate Cytoscape app](App_network_view.JPG "Network viewer")
 
 ## System requirements
 ### Hardware
@@ -39,11 +39,17 @@ Full documentation and function reference for PathIntegrate can be found via our
 ## Citing PathIntegrate
 If you use PathIntegrate in your research, please consider citing our paper:
 ```bibtex
-PathIntegrate: Multivariate modelling approaches for pathway-based multi-omics data integration
-
-Cecilia Wieder, Juliette Cooke, Clement Frainay, Nathalie Poupin, Jacob G. Bundy, Russell Bowler, Fabien Jourdan, Katerina J. Kechris, Rachel PJ Lai, Timothy Ebbels
-
-Manuscript in preparation
+@article{Wieder2024,
+   author = {Cecilia Wieder and Juliette Cooke and Clement Frainay and Nathalie Poupin and Russell Bowler and Fabien Jourdan and Katerina J Kechris and Rachel Pj Lai and Timothy Ebbels},
+   doi = {10.1101/2024.01.09.574780},
+   journal = {bioRxiv},
+   month = {1},
+   pages = {2024.01.09.574780},
+   publisher = {Cold Spring Harbor Laboratory},
+   title = {PathIntegrate: Multivariate modelling approaches for pathway-based multi-omics data integration},
+   url = {https://www.biorxiv.org/content/10.1101/2024.01.09.574780v1 https://www.biorxiv.org/content/10.1101/2024.01.09.574780v1.abstract},
+   year = {2024},
+}
 ```
 
 ## License
