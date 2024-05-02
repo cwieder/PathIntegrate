@@ -40,14 +40,17 @@ Full documentation and function reference for PathIntegrate can be found via our
 If you use PathIntegrate in your research, please consider citing our paper:
 ```bibtex
 @article{Wieder2024,
-   author = {Cecilia Wieder and Juliette Cooke and Clement Frainay and Nathalie Poupin and Russell Bowler and Fabien Jourdan and Katerina J Kechris and Rachel Pj Lai and Timothy Ebbels},
-   doi = {10.1101/2024.01.09.574780},
-   journal = {bioRxiv},
-   month = {1},
-   pages = {2024.01.09.574780},
-   publisher = {Cold Spring Harbor Laboratory},
+   author = {Cecilia Wieder and Juliette Cooke and Clement Frainay and Nathalie Poupin and Russell Bowler and Fabien Jourdan and Katerina J. Kechris and Rachel P.J. Lai and Timothy Ebbels},
+   doi = {10.1371/JOURNAL.PCBI.1011814},
+   issue = {3},
+   journal = {PLOS Computational Biology},
+   month = {3},
+   pages = {e1011814},
+   pmid = {38527092},
+   publisher = {Public Library of Science},
    title = {PathIntegrate: Multivariate modelling approaches for pathway-based multi-omics data integration},
-   url = {https://www.biorxiv.org/content/10.1101/2024.01.09.574780v1 https://www.biorxiv.org/content/10.1101/2024.01.09.574780v1.abstract},
+   volume = {20},
+   url = {https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011814},
    year = {2024},
 }
 ```
