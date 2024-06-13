@@ -494,7 +494,7 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
     #                         sidebar2,
     #                         ]),],fluid=True)
     # app.layout = html.Div([dcc.Location(id="url"), navbar, sidebar, content, sidebar2])
-    app.run(debug=True, use_reloader=False)
+    app.run()
 
 
  
