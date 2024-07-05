@@ -390,7 +390,7 @@ def update_legend(node_value):
     
     elif node_value == 'VIP (MultiView only)':
         if modelname == 'MultiView':
-            colorbar_image = get_colorbar_image(cmaps['VIP_cmap'][0], cmaps['VIP_cmap'][1],'VIP')
+            colorbar_image = get_colorbar_image(cmaps['VIP_cmap'][0], cmaps['VIP_cmap'][1],'VIP (scaled)')
                     # Encode the image to base64
             encoded_image = encode_image(colorbar_image)
             # Return the image source for the html.Img component
@@ -574,7 +574,7 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
     #                         sidebar2,
     #                         ]),],fluid=True)
     # app.layout = html.Div([dcc.Location(id="url"), navbar, sidebar, content, sidebar2])
-    app.run(debug=True)
+    app.run()
 
 
  
