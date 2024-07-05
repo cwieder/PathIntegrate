@@ -22,6 +22,9 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import cmcrameri as cmc
 import pkg_resources
+import matplotlib.colorbar as cbar
+import base64
+from io import BytesIO
 
 
 # Save downloads to default Downloads folder
@@ -63,6 +66,29 @@ root_cmap = dict(zip(set(hierarchy_hsa_all['Root']), sns.color_palette("husl", l
 
 cy_mo = nx.readwrite.json_graph.cytoscape_data(G)
 
+# another figure for the network legend 
+def get_colorbar_image(values, cmap_name, title):
+    fig, ax = plt.subplots(figsize=(6, 1))
+    fig.subplots_adjust(bottom=0.5)
+    
+    norm = plt.Normalize(min(values), max(values))
+    cmap = plt.cm.get_cmap(cmap_name)  # Change the colormap here as desired
+    # norm = mcolors.Normalize(vmin=min(values), vmax=max(values))
+    
+    cbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation='horizontal')
+    ax.set_title(title)
+
+    # Save the figure to a BytesIO object
+    buf = BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    plt.close(fig)
+    buf.seek(0)
+    
+    return buf
+
+
+def encode_image(image):
+    return base64.b64encode(image.read()).decode('ascii')
 
 
 # Network layout configuration
@@ -111,11 +137,11 @@ sidebar = html.Div(
     ),
     dcc.Dropdown(
     id='dropdown-update-node-color',
-    value='hierarchy',
+    value='Hierarchy',
     clearable=False,
     options=[
         {'label': name.capitalize(), 'value': name}
-        for name in ['hierarchy', 'beta', 'VIP', 'P-value']
+        for name in ['Hierarchy', 'Feature importance', 'VIP (MultiView only)']
     ]),
     # html.P(
     #     "Show omics"
@@ -215,7 +241,7 @@ def update_layout(layout):
 @app.callback(Output('mo_graph', 'stylesheet'),
               Input('dropdown-update-node-color', 'value'))
 def update_stylesheet(node_value):
-    node_value_color = {'hierarchy': 'data(color)', 'beta': 'data(BetaColour)', 'VIP': 'data(VIPColour)', 'P-value': 'data(PvalColour)'}
+    node_value_color = {'Hierarchy': 'data(color)', 'Feature importance': 'data(BetaColour)', 'VIP (MultiView only)': 'data(VIPColour)'}
 
     new_styles = [
         {
@@ -338,7 +364,42 @@ def update_bar_chart(pathway):
 #         fig = px.bar(mean_vals_long, x="variable", y="value", 
 #                     color="Group", barmode="group")
 #         return fig
+    
+# update legend coloubar based on selected node colour
+@app.callback(Output('colorbar-image', 'src'),
+              Input('dropdown-update-node-color', 'value'))
+def update_legend(node_value):
+        # Generate the colorbar image in memory based on selected 
+    if node_value == 'Hierarchy':
+        # hide the legend for hierarchy - do not display
+        return None
+        
+    elif node_value == 'Feature importance':
+        if modelname == 'MultiView':
+            colorbar_image = get_colorbar_image(cmaps['Beta_cmap'][0], cmaps['Beta_cmap'][1], 'Beta')
+        elif modelname == 'SingleView':
+            if ['Beta_cmap' in cmaps]:
+                colorbar_image = get_colorbar_image(cmaps['Beta_cmap'][0], cmaps['Beta_cmap'][1], 'Beta')
+            elif ['Importance_cmap' in cmaps]:
+                colorbar_image = get_colorbar_image(cmaps['Importance_cmap'][0], cmaps['Importance_cmap'][1],'Feature importance')
+    
+            # Encode the image to base64
+        encoded_image = encode_image(colorbar_image)
+        # Return the image source for the html.Img component
+        return 'data:image/png;base64,{}'.format(encoded_image)
+    
+    elif node_value == 'VIP (MultiView only)':
+        if modelname == 'MultiView':
+            colorbar_image = get_colorbar_image(cmaps['VIP_cmap'][0], cmaps['VIP_cmap'][1],'VIP')
+                    # Encode the image to base64
+            encoded_image = encode_image(colorbar_image)
+            # Return the image source for the html.Img component
+            return 'data:image/png;base64,{}'.format(encoded_image)
+        else:
+            return None
 
+
+cmaps = {}
 
 # start local server
 def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p_values=None, **kwargs):
@@ -352,6 +413,7 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
     global modelname
     modelname = pi_model.name
 
+
     if pi_model.name == 'MultiView':
         pathways_accessible = list(set(sum([i.columns.tolist() for i in pi_model.sspa_scores.values()], [])))
         # add beta as node colour
@@ -362,16 +424,25 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
         vip_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.vip['VIP_scaled'].tolist(), 'Blues')))
         G.add_nodes_from([(node, {'VIPColour': attr}) for (node, attr) in vip_cmap.items()])
 
+        cmaps['VIP_cmap'] = [pi_model.vip['VIP_scaled'].tolist(), 'Blues']
+        cmaps['Beta_cmap'] = [pi_model.beta, 'RdBu']
+
+
     if pi_model.name == 'SingleView':
         pathways_accessible = pi_model.sspa_scores.columns.tolist()
         # add beta as node colour
-        # betas_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.beta, 'RdBu')))
-        # G.add_nodes_from([(node, {'BetaColour': attr}) for (node, attr) in betas_cmap.items()])
 
-        # # add vip as node colour
-        # vip_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.vip['VIP_scaled'].tolist(), 'Blues')))
-        # G.add_nodes_from([(node, {'VIPColour': attr}) for (node, attr) in vip_cmap.items()])
-        #
+        # if logistic or svm use coef_ attribute
+        # if random forest use feature_importances_
+        if hasattr(pi_model, 'coef_'):
+            betas_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.coef_[0], 'RdBu')))
+            G.add_nodes_from([(node, {'BetaColour': attr}) for (node, attr) in betas_cmap.items()])
+            cmaps['Beta_cmap'] = [pi_model.coef_[0], 'RdBu']
+        elif hasattr(pi_model, 'feature_importances_'):
+            betas_cmap = dict(zip(pathways_accessible, get_hex_colors(pi_model.feature_importances_, 'Blues')))
+            G.add_nodes_from([(node, {'BetaColour': attr}) for (node, attr) in betas_cmap.items()])
+            cmaps['Importane_cmap'] = [pi_model.feature_importances_, 'Blues']
+        
     # filter root pathways for pathways accessible by the model
     hierarchy_hsa_all_filt = hierarchy_hsa_all[hierarchy_hsa_all[1].isin(pathways_accessible)]
     root_cmap = dict(zip(set(hierarchy_hsa_all_filt['Root']), sns.color_palette("husl", len(set(hierarchy_hsa_all_filt['Root']))).as_hex()))
@@ -406,6 +477,14 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
         ),
     # style=CONTENT_STYLE
     )
+
+    
+
+    legend_panel = html.Div(children=[
+        html.Center([
+        html.Img(id='colorbar-image')
+        ])
+    ])
 
     sidebar2 = html.Div(
         [html.P("Node information"),
@@ -463,6 +542,7 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
         sidebar2,
         dcc.Tabs([
             dcc.Tab(label='Network', children=[
+                legend_panel,
                 content,
             ]),
             dcc.Tab(label='Molecular importance', children=[
@@ -494,7 +574,7 @@ def launch_network_app(pi_model, pathway_source, hierarchy_source='preloaded', p
     #                         sidebar2,
     #                         ]),],fluid=True)
     # app.layout = html.Div([dcc.Location(id="url"), navbar, sidebar, content, sidebar2])
-    app.run()
+    app.run(debug=True)
 
 
  

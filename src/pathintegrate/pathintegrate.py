@@ -53,7 +53,7 @@ class PathIntegrate:
         self.mv = None
         self.sv = None
 
-        self.labels = pd.factorize(self.metadata)[0]
+        self.labels = self.metadata
     
     def get_multi_omics_coverage(self):
         all_molecules = sum([i.columns.tolist() for i in self.omics_data.values()], [])
