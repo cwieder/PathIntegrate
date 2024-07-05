@@ -78,8 +78,12 @@ class PathIntegrate:
 
         self.sspa_scores_mv = dict(zip(self.omics_data.keys(), sspa_scores))
         print('Fitting MultiView model')
-        mv = MBPLS(n_components=ncomp)
-        mv.fit([i.copy(deep=True) for i in self.sspa_scores_mv.values()], self.labels)
+
+        try:
+            mv = MBPLS(n_components=ncomp)
+            mv.fit([i.copy(deep=True) for i in self.sspa_scores_mv.values()], self.labels)
+        except ValueError:
+            print('Error: binary class labels are required for Multi-View (mbpls) model')
 
         # compute VIP and scale VIP across omics
         vip_scores = VIP_multiBlock(mv.W_, mv.Ts_, mv.P_, mv.V_)
