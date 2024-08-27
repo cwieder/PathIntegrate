@@ -32,7 +32,7 @@ pip install PathIntegrate
 ```
 
 ## Tutorials and documentation
-Please see our Quickstart guide on [Google Colab](https://colab.research.google.com/drive/1nv9lp8mMQ2Yk8n9uI9hBMvH71MlWp3UJ?usp=sharing)
+Please see our Quickstart guide on [Google Colab](https://colab.research.google.com/drive/1MmGJp8I4JaIgFGNihYjaa4KJqYTGzdtv?usp=sharing)
 
 Full documentation and function reference for PathIntegrate can be found via our [ReadTheDocs page](https://cwieder.github.io/PathIntegrate/)
 
