@@ -55,5 +55,9 @@ If you use PathIntegrate in your research, please consider citing our paper:
 }
 ```
 
+## PathIntegrate applications
+Check out the following papers to see how PathIntegrate has been used in research:
+- [Time-resolved, integrated multi-omic analysis reveals central role of amino acid pathways for defense responses in Arabidopsis thaliana](https://www.biorxiv.org/content/10.1101/2024.08.27.609849v1.full)
+
 ## License
 GNU GPL v3
