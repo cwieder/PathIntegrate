@@ -355,6 +355,7 @@ class PathIntegrate:
             # calculating the ari score and adding this to the metrics (if confusion matrix is created)
             ari_score = sklearn.metrics.adjusted_rand_score(sspa_scores_meta['Who_Group'], sspa_scores_meta['Consensus_Cluster'])
             self.sv_clust.metrics['Adjusted_Rand_Index'] = ari_score
+            sv_clust.confusion_matrix = fig
 
         # if the metrics table is requested
         if return_metrics_table:
@@ -375,8 +376,10 @@ class PathIntegrate:
             sv_clust.metrics_plot = fig_metrics
 
         print('Finished')
-        
+
+        # creating a new sspa_scores obecjt with clusters
         self.sv_clust.sspa_scores_clusters = self.sspa_scores_sv
+        
         return self.sv_clust
 
 
