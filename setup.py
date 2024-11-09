@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name='PathIntegrate',
-    version='0.0.4',
+    version='1.0.0',
     packages=['pathintegrate'],
     package_dir={'':'src'},
     url='https://github.com/cwieder/PathIntegrate',
