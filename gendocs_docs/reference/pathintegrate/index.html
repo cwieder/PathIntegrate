@@ -306,6 +306,27 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#singleviewclust" class="md-nav__link">
+    .SingleViewClust
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singleviewdimred" class="md-nav__link">
+    .SingleViewDimRed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#convert_range_to_midpoint" class="md-nav__link">
+    .convert_range_to_midpoint
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#singleviewcv" class="md-nav__link">
     .SingleViewCV
   </a>
@@ -409,6 +430,27 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#singleviewclust" class="md-nav__link">
+    .SingleViewClust
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singleviewdimred" class="md-nav__link">
+    .SingleViewDimRed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#convert_range_to_midpoint" class="md-nav__link">
+    .convert_range_to_midpoint
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#singleviewcv" class="md-nav__link">
     .SingleViewCV
   </a>
@@ -457,7 +499,7 @@
 
 <h1 id="_1"></h1>
 <h2 id="pathintegrate">PathIntegrate</h2>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L11">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L21">source</a>
 <div class="highlight"><pre><span></span><code><span class="n">PathIntegrate</span><span class="p">(</span>
    <span class="n">omics_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">pathway_source</span><span class="p">,</span> <span class="n">sspa_scoring</span> <span class="o">=</span> <span class="n">sspa</span><span class="o">.</span><span class="n">sspa_SVD</span><span class="p">,</span>
    <span class="n">min_coverage</span> <span class="o">=</span> <span class="mi">3</span>
@@ -481,7 +523,7 @@
 <li><strong>pathway_source</strong> (pandas.DataFrame) : Pathway source data.</li>
 <li><strong>pathway_dict</strong> (dict) : Dictionary of pathways. Keys are pathway names, values are lists of molecules.</li>
 <li><strong>sspa_scoring</strong> (object) : Scoring method for SSPA.</li>
-<li><strong>min_coverage</strong> (int) : Minimum number of omics required to cover a pathway.</li>
+<li><strong>min_coverage</strong> (int) : Minimum number of molecules required to cover a pathway.</li>
 <li><strong>sspa_method</strong> (object) : SSPA scoring method.</li>
 <li><strong>sspa_scores_mv</strong> (dict) : Dictionary of SSPA scores for each omics data. Keys are omics names, values are pandas DataFrames.</li>
 <li><strong>sspa_scores_sv</strong> (pandas.DataFrame) : SSPA scores for all omics data concatenated.</li>
@@ -492,11 +534,11 @@
 </ul>
 <p><strong>Methods:</strong></p>
 <h3 id="get_multi_omics_coverage">.get_multi_omics_coverage</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L58">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L69">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">get_multi_omics_coverage</span><span class="p">()</span>
 </code></pre></div></p>
 <h3 id="multiview">.MultiView</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L63">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L74">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">MultiView</span><span class="p">(</span>
    <span class="n">ncomp</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="p">)</span>
@@ -512,7 +554,7 @@
 <li><strong>object</strong>  : Fitted PathIntegrate MultiView model.</li>
 </ul>
 <h3 id="singleview">.SingleView</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L105">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L119">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">SingleView</span><span class="p">(</span>
    <span class="n">model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegression</span><span class="p">,</span> <span class="n">model_params</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span>
@@ -528,8 +570,75 @@
 <ul>
 <li><strong>object</strong>  : Fitted PathIntegrate SingleView model.</li>
 </ul>
+<h3 id="singleviewclust">.SingleViewClust</h3>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L157">source</a>
+<div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">SingleViewClust</span><span class="p">(</span>
+   <span class="n">model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">KMeans</span><span class="p">,</span> <span class="n">n_clusters_range</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">model_params</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+   <span class="n">use_pca</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">pca_params</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">consensus_clustering</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">n_runs</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+   <span class="n">auto_n_clusters</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">subsample_fraction</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">return_plot</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+   <span class="n">return_ground_truth_plot</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">return_confusion_matrix</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+   <span class="n">return_metrics_table</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span>
+</code></pre></div></p>
+<hr />
+<p>Fits a PathIntegrate SingleView Unsupervised model using an SKLearn-compatible KMeans model.
+Credit: Jude Popham</p>
+<p><strong>Args</strong></p>
+<ul>
+<li><strong>model</strong> (object, optional) : SKLearn clustering model class. Defaults to sklearn.cluster.KMeans.</li>
+<li><strong>model_params</strong> (dict, optional) : Model-specific hyperparameters. Defaults to None.</li>
+<li><strong>use_pca</strong> (bool, optional) : Whether to perform PCA before clustering. Defaults to False.</li>
+<li><strong>pca_params</strong> (dict, optional) : PCA-specific hyperparameters. Defaults to None.</li>
+<li><strong>consensus_clustering</strong> (bool, optional) : Whether to perform consensus clustering. Defaults to False.</li>
+<li><strong>n_runs</strong> (int, optional) : Number of runs for consensus clustering. Defaults to 10.</li>
+<li><strong>auto_n_clusters</strong> (bool, optional) : Automatically determine the optimal number of clusters. Defaults to False.</li>
+<li><strong>n_clusters_range</strong> (tuple, optional) : Range of cluster numbers to evaluate for optimal clusters. Defaults to (2, 10).</li>
+<li><strong>subsample_fraction</strong> (float, optional) : Fraction of samples to use for each consensus clustering run. Defaults to 0.8.</li>
+<li><strong>return_plot</strong> (bool, optional) : Whether to return a plot of the clustering result. Defaults to False.</li>
+<li><strong>return_ground_truth_plot</strong> (bool, optional) : Whether to return a plot comparing the clustering result with ground truth. Defaults to False.</li>
+<li><strong>return_confusion_matrix</strong> (bool, optional) : Whether to return a plot comparing different clustering algorithms. Defaults to False.</li>
+<li><strong>return_metrics_table</strong> (bool, optional) : Whether to return a table of clustering evaluation metrics. Defaults to False.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<ul>
+<li><strong>object</strong>  : Fitted PathIntegrate SingleView Clustering model with various plots saved inside.</li>
+</ul>
+<h3 id="singleviewdimred">.SingleViewDimRed</h3>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L387">source</a>
+<div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">SingleViewDimRed</span><span class="p">(</span>
+   <span class="n">model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">decomposition</span><span class="o">.</span><span class="n">PCA</span><span class="p">,</span> <span class="n">model_params</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">return_pca_plot</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+   <span class="n">return_tsne_plot</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">return_biplot</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">return_loadings_plot</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+   <span class="n">return_tsne_density_plot</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">metadata_continuous</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span>
+</code></pre></div></p>
+<hr />
+<p>Applies a dimensionality reduction technique to the input data.
+Credit: Jude Popham</p>
+<p><strong>Args</strong></p>
+<ul>
+<li><strong>model</strong> (object, optional) : The dimensionality reduction model to use. Defaults to sklearn.decomposition.PCA.</li>
+<li><strong>model_params</strong> (dict, optional) : Model-specific hyperparameters. Defaults to None.</li>
+<li><strong>return_pca_plot</strong> (bool, optional) : Whether to return a PCA scatter plot of the first two principal components.</li>
+<li><strong>return_tsne_plot</strong> (bool, optional) : Whether to return a t-SNE scatter plot of the first two components.</li>
+<li><strong>return_biplot</strong> (bool, optional) : Whether to return a biplot (PCA plot with loadings).</li>
+<li><strong>return_loadings_plot</strong> (bool, optional) : Whether to return a plot of the top loadings for each component.</li>
+<li><strong>return_tsne_density_plot</strong> (bool, optional) : Whether to return a t-SNE scatter plot with a density overlay.</li>
+<li><strong>metadata_continuous</strong> (bool, optional) : Whether metadata is continuous or categorical.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<ul>
+<li><strong>object</strong>  : Fitted dimensionality reduction model with reduced data and optional plots.</li>
+</ul>
+<h3 id="convert_range_to_midpoint">.convert_range_to_midpoint</h3>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L589">source</a>
+<div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">convert_range_to_midpoint</span><span class="p">(</span>
+   <span class="n">value</span>
+<span class="p">)</span>
+</code></pre></div></p>
+<hr />
+<p>Converts a range like '10-20' into its midpoint value '15'.</p>
 <h3 id="singleviewcv">.SingleViewCV</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L141">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L601">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">SingleViewCV</span><span class="p">(</span>
    <span class="n">model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegression</span><span class="p">,</span> <span class="n">model_params</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
    <span class="n">cv_params</span> <span class="o">=</span> <span class="kc">None</span>
@@ -548,7 +657,7 @@
 <li><strong>object</strong>  : Cross-validation results.</li>
 </ul>
 <h3 id="singleviewgridsearchcv">.SingleViewGridSearchCV</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L166">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L625">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">SingleViewGridSearchCV</span><span class="p">(</span>
    <span class="n">param_grid</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegression</span><span class="p">,</span>
    <span class="n">grid_search_params</span> <span class="o">=</span> <span class="kc">None</span>
@@ -567,7 +676,7 @@
 <li><strong>object</strong>  : GridSearchCV object.</li>
 </ul>
 <h3 id="multiviewcv">.MultiViewCV</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L193">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L655">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">MultiViewCV</span><span class="p">()</span>
 </code></pre></div></p>
 <hr />
@@ -577,7 +686,7 @@
 <li><strong>object</strong>  : Cross-validation results.</li>
 </ul>
 <h3 id="multiviewgridsearchcv">.MultiViewGridSearchCV</h3>
-<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L210">source</a>
+<p><a href="https://github.com/cwieder/pathintegrate/blob/master/src/pathintegrate/pathintegrate.py/#L672">source</a>
 <div class="highlight"><pre><span></span><code><span class="o">.</span><span class="n">MultiViewGridSearchCV</span><span class="p">()</span>
 </code></pre></div></p>
 
