@@ -12,6 +12,7 @@ PathIntegrate Python package for pathway-based multi-omics data integration
     - Single-View model: Integrates multi-omics data into one set of multi-omics pathway scores and applies an SKlearn-compatible predictive model
     - Pathway importance
     - Sample prediction
+    - NEW unsupervised SingleView models (dimensionality reduction and clustering in the pathway space)
 - SKlearn-like API for easy integration into existing pipelines
 - Support for multiple pathway databases, including KEGG, Reactome, PathBank, and custom GMT files 
 - Support for multiple pathway scoring methods available via the [sspa](https://github.com/cwieder/py-ssPA) package
@@ -61,3 +62,6 @@ Check out the following papers to see how PathIntegrate has been used in researc
 
 ## License
 GNU GPL v3
+
+## Contributors
+- Jude Popham @[judepops](https://github.com/judepops)
