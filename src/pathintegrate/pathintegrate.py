@@ -35,7 +35,7 @@ class PathIntegrate:
         pathway_source (pandas.DataFrame): Pathway source data.
         pathway_dict (dict): Dictionary of pathways. Keys are pathway names, values are lists of molecules.
         sspa_scoring (object): Scoring method for SSPA.
-        min_coverage (int): Minimum number of omics required to cover a pathway.
+        min_coverage (int): Minimum number of molecules required to cover a pathway.
         sspa_method (object): SSPA scoring method.
         sspa_scores_mv (dict): Dictionary of SSPA scores for each omics data. Keys are omics names, values are pandas DataFrames.
         sspa_scores_sv (pandas.DataFrame): SSPA scores for all omics data concatenated.
@@ -64,7 +64,7 @@ class PathIntegrate:
         self.sv = None
         self.sv_us = None
 
-        self.labels = pd.factorize(self.metadata)[0]
+        self.labels = self.metadata
     
     def get_multi_omics_coverage(self):
         all_molecules = sum([i.columns.tolist() for i in self.omics_data.values()], [])
@@ -89,8 +89,11 @@ class PathIntegrate:
 
         self.sspa_scores_mv = dict(zip(self.omics_data.keys(), sspa_scores))
         print('Fitting MultiView model')
-        mv = MBPLS(n_components=ncomp)
-        mv.fit([i.copy(deep=True) for i in self.sspa_scores_mv.values()], self.labels)
+        try:
+            mv = MBPLS(n_components=ncomp)
+            mv.fit([i.copy(deep=True) for i in self.sspa_scores_mv.values()], self.labels)
+        except ValueError:
+            print('Error: binary class labels are required for Multi-View (mbpls) model')
 
         # compute VIP and scale VIP across omics
         vip_scores = VIP_multiBlock(mv.W_, mv.Ts_, mv.P_, mv.V_)
@@ -150,13 +153,11 @@ class PathIntegrate:
 
         return self.sv
     
-    # no cross validation in unsupervised (but can bootstrap)
-
-    # cross-validation approaches
 
     def SingleViewClust(self, model=sklearn.cluster.KMeans,n_clusters_range=(2, 10),  model_params=None, use_pca=True, pca_params=None, consensus_clustering=False, n_runs=10, auto_n_clusters=False, subsample_fraction=0.8, return_plot=False, return_ground_truth_plot=False, return_confusion_matrix=False, return_metrics_table=False):
         """
         Fits a PathIntegrate SingleView Unsupervised model using an SKLearn-compatible KMeans model.
+        Credit: Jude Popham
 
         Args:
             model (object, optional): SKLearn clustering model class. Defaults to sklearn.cluster.KMeans.
@@ -377,7 +378,7 @@ class PathIntegrate:
 
         print('Finished')
 
-        # creating a new sspa_scores obecjt with clusters
+        # creating a new sspa_scores object with clusters
         self.sv_clust.sspa_scores_clusters = self.sspa_scores_sv
         
         return self.sv_clust
@@ -386,6 +387,7 @@ class PathIntegrate:
     def SingleViewDimRed(self, model=sklearn.decomposition.PCA, model_params=None, return_pca_plot=False,return_tsne_plot = False, return_biplot=False, return_loadings_plot=False, return_tsne_density_plot=False ,metadata_continuous=False):
         """
         Applies a dimensionality reduction technique to the input data.
+        Credit: Jude Popham
 
         Args:
             model (object, optional): The dimensionality reduction model to use. Defaults to sklearn.decomposition.PCA.
@@ -596,7 +598,27 @@ class PathIntegrate:
                 return value  
         return value  
  
-    
+    def SingleViewCV(self, model=sklearn.linear_model.LogisticRegression, model_params=None, cv_params=None):
+        '''Cross-validation for SingleView model.
+            Args:
+            model (object, optional): SKlearn prediction model class. Defaults to sklearn.linear_model.LogisticRegression.
+            model_params (_type_, optional): Model-specific hyperparameters. Defaults to None.
+            cv_params (dict, optional): Cross-validation parameters. Defaults to None.
+            Returns:
+            object: Cross-validation results.
+        '''
+        # concatenate omics - unscaled to avoid data leakage
+        concat_data = pd.concat(self.omics_data.values(), axis=1)
+
+         # Set up sklearn pipeline
+        pipe_sv = sklearn.pipeline.Pipeline([
+            ('Scaler', StandardScaler().set_output(transform="pandas")),
+            ('sspa', self.sspa_method(self.pathway_source, self.min_coverage)),
+            ('sv', model(**model_params))
+        ])
+
+        cv_res = cross_val_score(pipe_sv, X=concat_data, y=self.labels, **cv_params)
+        return cv_res
 
     def SingleViewGridSearchCV(self, param_grid, model=sklearn.linear_model.LogisticRegression, grid_search_params=None):
         '''Grid search cross-validation for SingleView model.
@@ -646,8 +668,7 @@ class PathIntegrate:
         return cv_res
 
     def MultiViewGridSearchCV(self):
-        pass
-
+        raise NotImplementedError('See tutorial for Multi-View latent variable optimisation approach')
 
 
 def VIP_multiBlock(x_weights, x_superscores, x_loadings, y_loadings):
