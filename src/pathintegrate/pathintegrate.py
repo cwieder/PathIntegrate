@@ -600,12 +600,14 @@ class PathIntegrate:
  
     def SingleViewCV(self, model=sklearn.linear_model.LogisticRegression, model_params=None, cv_params=None):
         '''Cross-validation for SingleView model.
+
             Args:
-            model (object, optional): SKlearn prediction model class. Defaults to sklearn.linear_model.LogisticRegression.
-            model_params (_type_, optional): Model-specific hyperparameters. Defaults to None.
-            cv_params (dict, optional): Cross-validation parameters. Defaults to None.
+                model (object, optional): SKlearn prediction model class. Defaults to sklearn.linear_model.LogisticRegression.
+                model_params (_type_, optional): Model-specific hyperparameters. Defaults to None.
+                cv_params (dict, optional): Cross-validation parameters. Defaults to None.
             Returns:
-            object: Cross-validation results.
+                object: Cross-validation results.
+                
         '''
         # concatenate omics - unscaled to avoid data leakage
         concat_data = pd.concat(self.omics_data.values(), axis=1)

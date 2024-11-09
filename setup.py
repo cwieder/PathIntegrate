@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name='PathIntegrate',
-    version='1.0.0',
+    version='1.0.2',
     packages=['pathintegrate'],
     package_dir={'':'src'},
     url='https://github.com/cwieder/PathIntegrate',
@@ -25,10 +25,11 @@ setup(
     install_requires=[
         'cmcrameri',
         'dash',
-        'dash_bootstrap_components',
-        'dash_cytoscape',
+        'dash-bootstrap-components',
+        'dash-cytoscape',
         'datauri',
         'mbpls',
+        'scikit-learn',
         'networkx',
         'setuptools',
         'sspa>=1.0.1',
